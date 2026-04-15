@@ -65,9 +65,36 @@ namespace IVSoftware.MSTest
                 {
                     Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority.A1.ToFullKey());
                     Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A1));
-                    aep.CancelAuthorityEpoch(@throw: false);
-                    Assert.IsTrue(aep.IsZero());
-                    Assert.AreEqual(AuthorityReserved.NoAuthority, aep.Authority);
+
+                    using (aep.RequestAuthority(TestAuthority.A2))
+                    {
+                        Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority.A1.ToFullKey());
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A2));
+                    }
+
+                    using (aep.RequestAuthority(TestAuthority.A3))
+                    {
+                        Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority.A1.ToFullKey());
+                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority.A2)); // Relinquished = disposed.
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A3));
+                    }
+
+                    using (aep.RequestAuthority(TestAuthority.A2))
+                    using (aep.RequestAuthority(TestAuthority.A3))
+                    {
+                        Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority.A1.ToFullKey());
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A1));
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A2));
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A3));
+
+                        aep.CancelAuthorityEpoch(@throw: false);
+
+                        Assert.IsTrue(aep.IsZero());
+                        Assert.AreEqual(AuthorityReserved.NoAuthority, aep.Authority);
+                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority.A1));
+                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority.A2));
+                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority.A3));
+                    }
                 }
                 Assert.IsTrue(aep.IsCancelled);
                 Assert.HasCount(0, builder);
