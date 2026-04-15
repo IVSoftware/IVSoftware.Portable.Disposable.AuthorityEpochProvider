@@ -20,6 +20,16 @@ namespace IVSoftware.Portable.Disposable.AuthorityEpochProvider
             public AuthorityEpochProvider? Current { get; set; }
             protected override void OnBeginUsing(BeginUsingEventArgs e)
             {
+                if(e.AutoDisposableContext.Sender is Enum authority)
+                {
+                    Current?.Authority = authority;
+                }
+                else
+                {
+                    this.ThrowFramework<InvalidCastException>(
+                        $"Expecting an Enum that is the current authority.",
+                        @throw: true);
+                }
                 Current?.IsCancelled = false;
                 base.OnBeginUsing(e);
                 Current?.OnBeginUsing(e);

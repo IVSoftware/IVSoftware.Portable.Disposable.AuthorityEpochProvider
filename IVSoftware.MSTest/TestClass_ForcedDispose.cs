@@ -1,6 +1,7 @@
 ﻿using IVSoftware.Portable.Common;
 using IVSoftware.Portable.Disposable;
 using IVSoftware.Portable.Disposable.AuthorityEpochProvider;
+using IVSoftware.Portable.Xml.Linq.XBoundObject;
 using IVSoftware.WinOS.MSTest.Extensions;
 
 namespace IVSoftware.MSTest
@@ -62,6 +63,8 @@ namespace IVSoftware.MSTest
             {
                 using (aep.RequestAuthority(TestAuthority.A1))
                 {
+                    Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority.A1.ToFullKey());
+                    Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A1));
                     aep.CancelAuthorityEpoch(@throw: false);
                     Assert.IsTrue(aep.IsZero());
                     Assert.AreEqual(AuthorityReserved.NoAuthority, aep.Authority);
