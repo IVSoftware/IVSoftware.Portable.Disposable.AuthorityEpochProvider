@@ -20,13 +20,22 @@ namespace IVSoftware.Portable.Disposable.AuthorityEpochProvider
             public AuthorityEpochProvider? Current { get; set; }
             protected override void OnBeginUsing(BeginUsingEventArgs e)
             {
+                Current?.IsCancelled = false;
                 base.OnBeginUsing(e);
                 Current?.OnBeginUsing(e);
             }
             protected override void OnFinalDispose(FinalDisposeEventArgs e)
             {
-                base.OnFinalDispose(e);
-                Current?.OnFinalDispose(e);
+                Current?.IsDisposing = true;
+                try
+                {
+                    base.OnFinalDispose(e);
+                    Current?.OnFinalDispose(e);
+                }
+                finally
+                {
+                    Current?.IsDisposing = false;
+                }
             }
         }
         protected virtual void OnBeginUsing(BeginUsingEventArgs e) { }
@@ -57,12 +66,13 @@ namespace IVSoftware.Portable.Disposable.AuthorityEpochProvider
 
         public bool IsDisposing { get; private set; }
 
-        public bool IsCancellationPending { get; private set; }
+        public bool IsCancelled { get; private set; }
 
         public event EventHandler? BeginUsing;
         public event EventHandler? FinalDispose;
         public void CancelAuthorityEpoch(bool @throw)
         {
+            IsCancelled = true;
             DHost.Current = null;
             DHost = new (this);
             var msg = $"{Authority.ToFullKey()} authority epoch has been cancelled.";

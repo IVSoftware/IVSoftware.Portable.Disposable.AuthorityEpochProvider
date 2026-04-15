@@ -80,9 +80,9 @@ namespace IVSoftware.Portable.Disposable
         void CancelAuthorityEpoch(bool @throw);
         
         /// <summary>
-        /// Indicates that the final disposed event should not be raised.
+        /// Indicates that the epoch was cancelled.
         /// </summary>
-        bool IsCancellationPending { get; }
+        bool IsCancelled { get; }
         #endregion C A N C E L
 
         /// <summary>

@@ -66,6 +66,7 @@ namespace IVSoftware.MSTest
                     Assert.IsTrue(aep.IsZero());
                     Assert.AreEqual(AuthorityReserved.NoAuthority, aep.Authority);
                 }
+                Assert.IsTrue(aep.IsCancelled);
                 Assert.HasCount(0, builder);
             }
             #endregion S U B T E S T S
