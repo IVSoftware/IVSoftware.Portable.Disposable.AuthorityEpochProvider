@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 
+
 namespace IVSoftware.Portable.Disposable
 {
     /// <summary>
@@ -67,6 +68,15 @@ namespace IVSoftware.Portable.Disposable
         bool IsDisposing { get; }
 
         #region C A N C E L
+        /// <summary>
+        /// Immediately returns authority to (T)NoAuthorityReserved.NoAuthority.
+        /// </summary>
+        /// <remarks>
+        /// This reference now points to a new DisposableHost.
+        /// - IsZero() is true.
+        /// - HasAuthority is false;
+        /// - IsDisposing is false.
+        /// </remarks>
         void CancelAuthorityEpoch(bool @throw);
         
         /// <summary>

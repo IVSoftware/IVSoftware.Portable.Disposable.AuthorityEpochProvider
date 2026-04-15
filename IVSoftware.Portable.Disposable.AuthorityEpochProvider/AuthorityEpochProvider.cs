@@ -10,12 +10,46 @@ namespace IVSoftware.Portable.Disposable.AuthorityEpochProvider
 {
     public class AuthorityEpochProvider : IAuthorityEpochProvider
     {
-        private DisposableHost _dhost = new();
+        public AuthorityEpochProvider() => DHost = new(this);
+        private class DHostAuthorityProvider : DisposableHost 
+        {
+            public DHostAuthorityProvider(AuthorityEpochProvider current)
+            {
+                Current = current;
+            }
+            public AuthorityEpochProvider? Current { get; set; }
+            protected override void OnBeginUsing(BeginUsingEventArgs e)
+            {
+                base.OnBeginUsing(e);
+                Current?.OnBeginUsing(e);
+            }
+            protected override void OnFinalDispose(FinalDisposeEventArgs e)
+            {
+                base.OnFinalDispose(e);
+                Current?.OnFinalDispose(e);
+            }
+        }
+        protected virtual void OnBeginUsing(BeginUsingEventArgs e) { }
+        protected virtual void OnFinalDispose(FinalDisposeEventArgs e) { }
+
+        private DHostAuthorityProvider DHost
+        {
+            get => _dhost;
+            set
+            {
+                if (!Equals(_dhost, value))
+                {
+                    _dhost = value;
+                }
+            }
+        }
+        DHostAuthorityProvider _dhost = null!;
+
 
         public Enum Authority { get; private set; } = AuthorityReserved.NoAuthority;
 
         public Enum[] Authorities =>
-            _dhost
+            DHost
             .Tokens
             .Select(_ => _.Sender)
             .OfType<Enum>()
@@ -27,81 +61,21 @@ namespace IVSoftware.Portable.Disposable.AuthorityEpochProvider
 
         public event EventHandler? BeginUsing;
         public event EventHandler? FinalDispose;
-
         public void CancelAuthorityEpoch(bool @throw)
         {
-            _dhost = new();
+            DHost.Current = null;
+            DHost = new (this);
             var msg = $"{Authority.ToFullKey()} authority epoch has been cancelled.";
             Authority = AuthorityReserved.NoAuthority;
             if(@throw) throw new OperationCanceledException(msg);
         }
 
         public bool HasRequestedAuthority(Enum authority)
-        {
-            throw new NotImplementedException();
-        }
+            => Authorities.Any(_ => _.ToFullKey() == authority.ToFullKey());
 
-        public bool IsZero() => _dhost.IsZero();
+        public bool IsZero() => DHost.IsZero();
 
         public IDisposable RequestAuthority(Enum authority, Dictionary<string, object>? properties = null)
-            => _dhost.GetToken(sender: authority, properties);
-        #region E V E N T S
-
-        #if false && ABSTRACT
-        Interface-level event projection
-
-        The underlying DisposableHost exposes strongly-typed event args
-        (e.g., BeginUsingEventArgs, FinalDisposeEventArgs). The
-        IAuthorityEpochProvider contract deliberately surfaces only
-        EventHandler to avoid coupling the interface to those concrete types.
-
-        This region maintains separate invocation lists for the interface
-        events and relays them from the strongly-typed overrides.
-
-        This allows:
-
-        - Consumers to depend only on the abstraction
-        - The implementation to evolve its internal event args independently
-        - A stable, minimal contract surface for cross-package use
-
-        Invocation lists are managed explicitly to preserve thread safety
-        and avoid exposing the underlying event infrastructure.
-
-        #endif
-
-        private object _eventLock = new();
-        event EventHandler? IAuthorityEpochProvider.BeginUsing
-        {
-            add
-            {
-                if (value is null) return;
-                lock (_eventLock) _beginUsingInvocationList.Add(value);
-            }
-
-            remove
-            {
-                if (value is null) return;
-                lock (_eventLock) _beginUsingInvocationList.Remove(value);
-            }
-        }
-        private readonly List<EventHandler> _beginUsingInvocationList = new();
-
-
-        event EventHandler? IAuthorityEpochProvider.FinalDispose
-        {
-            add
-            {
-                if (value is null) return;
-                lock (_eventLock) _finalDisposeInvocationList.Add(value);
-            }
-
-            remove
-            {
-                if (value is null) return;
-                lock (_eventLock) _finalDisposeInvocationList.Remove(value);
-            }
-        }
-        private readonly List<EventHandler> _finalDisposeInvocationList = new();
-        #endregion E V E N T S
+            => DHost.GetToken(sender: authority, properties);
     }
 }
