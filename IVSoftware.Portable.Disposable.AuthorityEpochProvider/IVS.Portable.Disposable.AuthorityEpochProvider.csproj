@@ -46,9 +46,6 @@
 
 		<AssemblyOriginatorKeyFile>D:\PFX\231201.ivs.pfx</AssemblyOriginatorKeyFile>
 		<DebugType>embedded</DebugType>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
 		<SignAssembly>True</SignAssembly>
 	</PropertyGroup>
 

@@ -15,7 +15,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\IVSoftware.Portable.Disposable.AuthorityEpochProvider\IVSoftware.Portable.Disposable.AuthorityEpochProvider.csproj" />
+		<ProjectReference Include="..\IVSoftware.Portable.Disposable.AuthorityEpochProvider\IVS.Portable.Disposable.AuthorityEpochProvider.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
