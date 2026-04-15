@@ -23,7 +23,7 @@ namespace IVSoftware.MSTest
                 {
                     aep.FinalDispose -= localOnFinalDispose;
                 });
-            void localOnFinalDispose(object? sender, FinalDisposeEventArgs e)
+            void localOnFinalDispose(object? sender, EventArgs e)
             {
                 builder.Add(e.ToString());
             }

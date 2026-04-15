@@ -41,14 +41,67 @@ namespace IVSoftware.Portable.Disposable.AuthorityEpochProvider
             throw new NotImplementedException();
         }
 
-        public bool IsZero()
-        {
-            throw new NotImplementedException();
-        }
+        public bool IsZero() => _dhost.IsZero();
 
-        public IDisposable RequestAuthority(Enum authority, IDictionary<string, object>? properties = null)
+        public IDisposable RequestAuthority(Enum authority, Dictionary<string, object>? properties = null)
+            => _dhost.GetToken(sender: authority, properties);
+        #region E V E N T S
+
+        #if false && ABSTRACT
+        Interface-level event projection
+
+        The underlying DisposableHost exposes strongly-typed event args
+        (e.g., BeginUsingEventArgs, FinalDisposeEventArgs). The
+        IAuthorityEpochProvider contract deliberately surfaces only
+        EventHandler to avoid coupling the interface to those concrete types.
+
+        This region maintains separate invocation lists for the interface
+        events and relays them from the strongly-typed overrides.
+
+        This allows:
+
+        - Consumers to depend only on the abstraction
+        - The implementation to evolve its internal event args independently
+        - A stable, minimal contract surface for cross-package use
+
+        Invocation lists are managed explicitly to preserve thread safety
+        and avoid exposing the underlying event infrastructure.
+
+        #endif
+
+        private object _eventLock = new();
+        event EventHandler? IAuthorityEpochProvider.BeginUsing
         {
-            throw new NotImplementedException();
+            add
+            {
+                if (value is null) return;
+                lock (_eventLock) _beginUsingInvocationList.Add(value);
+            }
+
+            remove
+            {
+                if (value is null) return;
+                lock (_eventLock) _beginUsingInvocationList.Remove(value);
+            }
         }
+        private readonly List<EventHandler> _beginUsingInvocationList = new();
+
+
+        event EventHandler? IAuthorityEpochProvider.FinalDispose
+        {
+            add
+            {
+                if (value is null) return;
+                lock (_eventLock) _finalDisposeInvocationList.Add(value);
+            }
+
+            remove
+            {
+                if (value is null) return;
+                lock (_eventLock) _finalDisposeInvocationList.Remove(value);
+            }
+        }
+        private readonly List<EventHandler> _finalDisposeInvocationList = new();
+        #endregion E V E N T S
     }
 }

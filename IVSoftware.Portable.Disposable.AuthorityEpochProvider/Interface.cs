@@ -41,7 +41,7 @@ namespace IVSoftware.Portable.Disposable
         /// - The 1 -> 0 edge raises the FinalDispose event with Authority intact and IsDisposing=true.
         /// - 1+ requestors are added as tokens and are visible to the HasAuthority method.
         /// </remarks>
-        IDisposable RequestAuthority(Enum authority, IDictionary<string, object>? properties = null);
+        IDisposable RequestAuthority(Enum authority, Dictionary<string, object>? properties = null);
 
         /// <summary>
         /// Indicates whether an authority has ever been requested.
