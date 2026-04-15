@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+
 
 namespace IVSoftware.Portable.Disposable
 {
     /// <summary>
-    /// Internal reserved value designed to not conflict with defined flags.
+    /// public reserved value designed to not conflict with defined flags.
     /// </summary>
-    internal enum AuthorityReserved { NoAuthority = int.MinValue, }
+    public enum AuthorityReserved { NoAuthority = int.MinValue, }
 
     /// <summary>
     /// Coordinates a reference-counted authority epoch across participants.
@@ -16,7 +18,7 @@ namespace IVSoftware.Portable.Disposable
     /// and the last release completes the epoch. Supports concurrent access,
     /// reentry awareness, and deterministic teardown via FinalDispose.
     /// </remarks>
-    internal interface IAuthorityEpochProvider
+    public interface IAuthorityEpochProvider
     {
         /// <summary>
         /// The first-come-first-served Authority for this epoch.
@@ -40,20 +42,7 @@ namespace IVSoftware.Portable.Disposable
         /// - The 1 -> 0 edge raises the FinalDispose event with Authority intact and IsDisposing=true.
         /// - 1+ requestors are added as tokens and are visible to the HasAuthority method.
         /// </remarks>
-        IDisposable RequestAuthority(Enum authority, IDictionary<string, object>? properties = null);
-
-        /// <summary>
-        /// Suppresses raising the FinalDispose event for the current epoch.
-        /// </summary>
-        /// <remarks>
-        /// Allows the epoch to proceed normally, culminating in state reset as
-        /// usual. The FinalDispose event is not raised.
-        ///
-        /// When <paramref name="raiseOperationCanceledException"/> is true, an
-        /// OperationCanceledException is raised during disposal to short-circuit
-        /// running blocks.
-        /// </remarks>
-        void CancelFinalDisposeEvent(bool raiseOperationCanceledException = false);
+        IDisposable RequestAuthority(Enum authority, Dictionary<string, object>? properties = null);
 
         /// <summary>
         /// Indicates whether an authority has ever been requested.
@@ -78,10 +67,23 @@ namespace IVSoftware.Portable.Disposable
         /// </remarks>
         bool IsDisposing { get; }
 
+        #region C A N C E L
         /// <summary>
-        /// Indicates that the final disposed event should not be raised.
+        /// Immediately returns authority to (T)NoAuthorityReserved.NoAuthority.
         /// </summary>
-        bool IsCancellationPending { get; }
+        /// <remarks>
+        /// This reference now points to a new DisposableHost.
+        /// - IsZero() is true.
+        /// - HasAuthority is false;
+        /// - IsDisposing is false.
+        /// </remarks>
+        void CancelAuthorityEpoch(bool @throw);
+        
+        /// <summary>
+        /// Indicates that the epoch was cancelled.
+        /// </summary>
+        bool IsCancelled { get; }
+        #endregion C A N C E L
 
         /// <summary>
         /// Announces that a new Authority epoch has begun.
@@ -101,7 +103,7 @@ namespace IVSoftware.Portable.Disposable
         event EventHandler? FinalDispose;
     }
 
-    internal interface IAuthorityEpochProvider<T> : IAuthorityEpochProvider
+    public interface IAuthorityEpochProvider<T> : IAuthorityEpochProvider
     where T : struct, Enum
     {
         new T Authority { get; }

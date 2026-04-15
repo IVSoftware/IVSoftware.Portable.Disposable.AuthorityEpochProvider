@@ -46,9 +46,6 @@
 
 		<AssemblyOriginatorKeyFile>D:\PFX\231201.ivs.pfx</AssemblyOriginatorKeyFile>
 		<DebugType>embedded</DebugType>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
 		<SignAssembly>True</SignAssembly>
 	</PropertyGroup>
 
@@ -66,7 +63,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="IVSoftware.Portable.Disposable" Version="2.0.0" />
+		<PackageReference Include="IVSoftware.Portable.Common" Version="*" />
+		<PackageReference Include="IVSoftware.Portable.Disposable" Version="*" />
+		<PackageReference Include="IVSoftware.Portable.Xml.Linq.XBoundObject" Version="*" />
 	</ItemGroup>
 
 </Project>

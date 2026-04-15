@@ -1,3 +1,4 @@
 <Solution>
-  <Project Path="IVSoftware.Portable.Disposable.AuthorityEpochProvider/IVSoftware.Portable.Disposable.AuthorityEpochProvider.csproj" />
+  <Project Path="IVSoftware.MSTest/IVS.MSTest.csproj" />
+  <Project Path="IVSoftware.Portable.Disposable.AuthorityEpochProvider/IVS.Portable.Disposable.AuthorityEpochProvider.csproj" />
 </Solution>
