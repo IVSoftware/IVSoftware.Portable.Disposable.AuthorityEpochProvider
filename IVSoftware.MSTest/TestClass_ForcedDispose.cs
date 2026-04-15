@@ -36,44 +36,91 @@ namespace IVSoftware.MSTest
         {
             string actual, expected;
 
-            AuthorityEpochProvider aep = new();  
+            AuthorityEpochProvider aep = new();
 
             var builder = new List<string?>();
-
-            #region L o c a l F x				
-            using var local = this.WithOnDispose(
-                onInit: (sender, e) =>
-                {
-                    aep.FinalDispose += localOnFinalDispose;
-                },
-                onDispose: (sender, e) =>
-                {
-                    aep.FinalDispose -= localOnFinalDispose;
-                });
-            void localOnFinalDispose(object? sender, EventArgs e)
+            aep.BeginUsing += (sender, eUnk) =>
             {
-                builder.Add(e.ToString());
-            }
-            #endregion L o c a l F x
+                if (eUnk is BeginUsingEventArgs e)
+                {
+                    builder.Add($"{nameof(aep.BeginUsing)}: {aep.Authority.ToFullKey()}");
+                }
+            };
+            aep.FinalDispose += (sender, eUnk) =>
+            {
+                if (eUnk is FinalDisposeEventArgs e)
+                {
+                    builder.Add($"{nameof(aep.FinalDispose)}: {aep.Authority.ToFullKey()} IsDisposing={aep.IsDisposing}");
+                }
+            };
 
+            subtest_BasicEpoch();
             subtest_BasicCancel();
 
             #region S U B T E S T S
+
+            void subtest_BasicEpoch()
+            {
+                using (aep.RequestAuthority(TestAuthority.A1))
+                {
+                    actual = string.Join(Environment.NewLine, builder); builder.Clear();
+                    actual.ToClipboardExpected();
+                    { }
+                    expected = @" 
+BeginUsing: TestAuthority.A1";
+
+                    Assert.AreEqual(
+                        expected.NormalizeResult(),
+                        actual.NormalizeResult(),
+                        "Expecting begin using."
+                    );
+                }
+                actual = string.Join(Environment.NewLine, builder); builder.Clear();
+                actual.ToClipboardExpected();
+                { }
+                expected = @" 
+FinalDispose: TestAuthority.A1 IsDisposing=True"
+                ;
+                Assert.AreEqual(
+                    expected.NormalizeResult(),
+                    actual.NormalizeResult(),
+                    "Expecting begin using."
+                );
+
+                Assert.IsFalse(aep.IsCancelled);
+                Assert.IsFalse(aep.IsDisposing);
+                Assert.IsTrue(aep.IsZero());
+                Assert.AreEqual(AuthorityReserved.NoAuthority, aep.Authority);
+            }
             void subtest_BasicCancel()
             {
                 using (aep.RequestAuthority(TestAuthority.A1))
                 {
+                    actual = string.Join(Environment.NewLine, builder); builder.Clear();
+                    actual.ToClipboardExpected();
+                    { }
+                    expected = @" 
+BeginUsing: TestAuthority.A1";
+
+                    Assert.AreEqual(
+                        expected.NormalizeResult(),
+                        actual.NormalizeResult(),
+                        "Expecting begin using."
+                    );
+
                     Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority.A1.ToFullKey());
                     Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A1));
 
                     using (aep.RequestAuthority(TestAuthority.A2))
                     {
+                        Assert.HasCount(0, builder);
                         Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority.A1.ToFullKey());
                         Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A2));
                     }
 
                     using (aep.RequestAuthority(TestAuthority.A3))
                     {
+                        Assert.HasCount(0, builder);
                         Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority.A1.ToFullKey());
                         Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority.A2)); // Relinquished = disposed.
                         Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A3));
@@ -82,6 +129,7 @@ namespace IVSoftware.MSTest
                     using (aep.RequestAuthority(TestAuthority.A2))
                     using (aep.RequestAuthority(TestAuthority.A3))
                     {
+                        Assert.HasCount(0, builder);
                         Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority.A1.ToFullKey());
                         Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A1));
                         Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A2));
@@ -99,6 +147,8 @@ namespace IVSoftware.MSTest
                 Assert.IsTrue(aep.IsCancelled);
                 Assert.HasCount(0, builder);
             }
+
+
             #endregion S U B T E S T S
         }
     }

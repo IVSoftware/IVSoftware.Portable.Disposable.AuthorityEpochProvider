@@ -2,9 +2,7 @@
 using IVSoftware.Portable.Xml.Linq.XBoundObject;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Text;
 
 namespace IVSoftware.Portable.Disposable.AuthorityEpochProvider
 {
@@ -45,11 +43,18 @@ namespace IVSoftware.Portable.Disposable.AuthorityEpochProvider
                 finally
                 {
                     Current?.IsDisposing = false;
+                    Current?.Authority = AuthorityReserved.NoAuthority;
                 }
             }
         }
-        protected virtual void OnBeginUsing(BeginUsingEventArgs e) { }
-        protected virtual void OnFinalDispose(FinalDisposeEventArgs e) { }
+        protected virtual void OnBeginUsing(BeginUsingEventArgs e) 
+        {
+            BeginUsing?.Invoke(this, e);
+        }
+        protected virtual void OnFinalDispose(FinalDisposeEventArgs e)
+        {
+            FinalDispose?.Invoke(this, e);
+        }
 
         private DHostAuthorityProvider DHost
         {
