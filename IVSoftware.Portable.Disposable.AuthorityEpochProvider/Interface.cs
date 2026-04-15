@@ -6,9 +6,9 @@ using System.ComponentModel;
 namespace IVSoftware.Portable.Disposable
 {
     /// <summary>
-    /// Internal reserved value designed to not conflict with defined flags.
+    /// public reserved value designed to not conflict with defined flags.
     /// </summary>
-    internal enum AuthorityReserved { NoAuthority = int.MinValue, }
+    public enum AuthorityReserved { NoAuthority = int.MinValue, }
 
     /// <summary>
     /// Coordinates a reference-counted authority epoch across participants.
@@ -18,7 +18,7 @@ namespace IVSoftware.Portable.Disposable
     /// and the last release completes the epoch. Supports concurrent access,
     /// reentry awareness, and deterministic teardown via FinalDispose.
     /// </remarks>
-    internal interface IAuthorityEpochProvider
+    public interface IAuthorityEpochProvider
     {
         /// <summary>
         /// The first-come-first-served Authority for this epoch.
@@ -103,7 +103,7 @@ namespace IVSoftware.Portable.Disposable
         event EventHandler? FinalDispose;
     }
 
-    internal interface IAuthorityEpochProvider<T> : IAuthorityEpochProvider
+    public interface IAuthorityEpochProvider<T> : IAuthorityEpochProvider
     where T : struct, Enum
     {
         new T Authority { get; }

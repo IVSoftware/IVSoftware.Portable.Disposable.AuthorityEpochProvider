@@ -1,6 +1,5 @@
 ﻿using IVSoftware.Portable.Common;
 using IVSoftware.Portable.Disposable;
-using IVSoftware.Portable.Disposable.AuthorityEpochProvider;
 using IVSoftware.Portable.Xml.Linq.XBoundObject;
 using IVSoftware.WinOS.MSTest.Extensions;
 

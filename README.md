@@ -1,4 +1,4 @@
-# AuthorityEpochProvider [[Github](https://github.com/IVSoftware/IVSoftware.Portable.Disposable.AuthorityEpochProvider.git)]
+# AuthorityEpochProvider
 
 Coordinates a shared, reference-counted authority across overlapping scopes.
 
@@ -17,7 +17,7 @@ Multiple participants need to operate within a shared context, but:
 
 - **Stable authority** (first requester wins)
 - **Scoped participation** via `IDisposable`
-- **Deterministic teardown** on the 1 → 0 transition
+- **Deterministic teardown** on the 1 -> 0 transition
 - **Safe cancellation** that detaches the current epoch without poisoning the instance
 
 ## Usage
@@ -39,7 +39,7 @@ using (aep.RequestAuthority(MyAuthority.A1))
 
 ## Key Behaviors
 
-- **Authority is established once** (0 → 1 transition)
+- **Authority is established once** (0 -> 1 transition)
 - **Authority remains stable** until all participants exit
 - **Nested requests do not override authority**
 - **FinalDispose fires once** when the last token is released
@@ -49,16 +49,36 @@ using (aep.RequestAuthority(MyAuthority.A1))
   - Suppresses FinalDispose
   - Allows reuse on the next line
 
+## Token Ring Mental Model
+
+Authorities can be treated as positions in a logical sequence (e.g., `A1 -> A2 -> A3`).
+
+- Any participant may enter the epoch at any position
+- The **first entrant defines the starting point**
+- Subsequent participants may join at any position without changing the start
+- Downstream logic can interpret authority relative to that starting point
+
+Example:
+
+```csharp
+using (aep.RequestAuthority(A2))
+{
+    // Epoch starts at A2
+
+    using (aep.RequestAuthority(A3))
+    using (aep.RequestAuthority(A1))
+    {
+        // Participants span the ring, but authority remains A2
+    }
+}
+```
+
+This enables scenarios where work proceeds in a predictable cycle,
+anchored to the first participant’s entry point.
+
 ## Notes
 
 - `HasRequestedAuthority` reflects **active participation**, not history
 - Cancellation detaches the provider from the current epoch; existing scopes complete silently
 - Thread-safe via underlying host
-
-## Mental Model
-
-- Think in terms of an **epoch**
-- First entrant defines authority
-- Others join and leave
-- Last one out triggers cleanup
 ```

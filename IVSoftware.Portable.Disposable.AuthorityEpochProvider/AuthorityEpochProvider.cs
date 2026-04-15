@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace IVSoftware.Portable.Disposable.AuthorityEpochProvider
+namespace IVSoftware.Portable.Disposable
 {
     public class AuthorityEpochProvider : IAuthorityEpochProvider
     {
