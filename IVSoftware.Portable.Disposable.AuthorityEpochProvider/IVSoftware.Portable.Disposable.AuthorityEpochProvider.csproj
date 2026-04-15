@@ -1,0 +1,72 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<Title>IVSoftware.Portable.Disposable.AuthorityEpochProvider</Title>
+		<PackageId>IVSoftware.Portable.Disposable.AuthorityEpochProvider</PackageId>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<Description>
+			Authority-based coordination over DisposableHost epochs.
+			Provides IAuthorityEpochProvider abstractions for deterministic
+			ownership, ordered participation, and controlled FinalDispose behavior
+			across concurrent consumers.
+		</Description>
+		<PackageTags>
+			idisposable;disposablehost;authority;epoch;reference-counting;
+			lifetime-management;concurrency;events;netstandard;portable
+		</PackageTags>
+		<RepositoryUrl>https://github.com/IVSoftware/IVSoftware.Portable.Disposable.AuthorityEpochProvider.git</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/IVSoftware/IVSoftware.Portable.Disposable.AuthorityEpochProvider.git</PackageProjectUrl>
+
+		<RootNamespace>IVSoftware.Portable.Disposable</RootNamespace>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+
+		<Author>Thomas C. Gregor</Author>
+		<Owner>IVSoftware LLC</Owner>
+		<Copyright>Copyright © 2023-2026 IVSoftware LLC</Copyright>
+
+		<FileVersion>$(AssemblyVersion)</FileVersion>
+		<Version>$(AssemblyVersion)</Version>
+		<BaseVersion>1.0.0</BaseVersion>
+		<VersionPrefix>$(BaseVersion)</VersionPrefix>
+
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+
+		<PackageReleaseNotes>
+			Version 1.0.0 - Initial release.
+
+			* Introduces IAuthorityEpochProvider for coordinated authority-based epochs.
+			* Establishes first-wins authority model with ordered participation tracking.
+			* Integrates with DisposableHost for deterministic FinalDispose semantics.
+			* Supports cancellation of FinalDispose event without interrupting epoch teardown.
+		</PackageReleaseNotes>
+
+		<AssemblyOriginatorKeyFile>D:\PFX\231201.ivs.pfx</AssemblyOriginatorKeyFile>
+		<DebugType>embedded</DebugType>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<SignAssembly>True</SignAssembly>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="README\**" />
+		<EmbeddedResource Remove="README\**" />
+		<None Remove="README\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="IVSoftware.Portable.Disposable" Version="2.0.0" />
+	</ItemGroup>
+
+</Project>
