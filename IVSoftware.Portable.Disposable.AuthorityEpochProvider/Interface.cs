@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace IVSoftware.Portable.Disposable
 {
@@ -43,19 +44,6 @@ namespace IVSoftware.Portable.Disposable
         IDisposable RequestAuthority(Enum authority, IDictionary<string, object>? properties = null);
 
         /// <summary>
-        /// Suppresses raising the FinalDispose event for the current epoch.
-        /// </summary>
-        /// <remarks>
-        /// Allows the epoch to proceed normally, culminating in state reset as
-        /// usual. The FinalDispose event is not raised.
-        ///
-        /// When <paramref name="raiseOperationCanceledException"/> is true, an
-        /// OperationCanceledException is raised during disposal to short-circuit
-        /// running blocks.
-        /// </remarks>
-        void CancelFinalDisposeEvent(bool raiseOperationCanceledException = false);
-
-        /// <summary>
         /// Indicates whether an authority has ever been requested.
         /// </summary>       
         /// <remarks>
@@ -78,10 +66,14 @@ namespace IVSoftware.Portable.Disposable
         /// </remarks>
         bool IsDisposing { get; }
 
+        #region C A N C E L
+        void CancelAuthorityEpoch(bool @throw);
+        
         /// <summary>
         /// Indicates that the final disposed event should not be raised.
         /// </summary>
         bool IsCancellationPending { get; }
+        #endregion C A N C E L
 
         /// <summary>
         /// Announces that a new Authority epoch has begun.

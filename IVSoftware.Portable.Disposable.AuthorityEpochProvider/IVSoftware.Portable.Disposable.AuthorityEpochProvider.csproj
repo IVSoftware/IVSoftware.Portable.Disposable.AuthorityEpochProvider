@@ -66,7 +66,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="IVSoftware.Portable.Disposable" Version="2.0.0" />
+		<PackageReference Include="IVSoftware.Portable.Common" Version="*" />
+		<PackageReference Include="IVSoftware.Portable.Disposable" Version="*" />
+		<PackageReference Include="IVSoftware.Portable.Xml.Linq.XBoundObject" Version="*" />
 	</ItemGroup>
 
 </Project>
