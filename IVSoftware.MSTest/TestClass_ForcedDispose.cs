@@ -39,20 +39,35 @@ namespace IVSoftware.MSTest
             AuthorityEpochProvider aep = new();
 
             var builder = new List<string?>();
-            aep.BeginUsing += (sender, eUnk) =>
+
+            #region I N T E R F A C E    E V E N T S
+            ((IAuthorityEpochProvider)aep).BeginUsing += (sender, e) =>
             {
-                if (eUnk is BeginUsingEventArgs e)
-                {
-                    builder.Add($"{nameof(aep.BeginUsing)}: {aep.Authority.ToFullKey()}");
-                }
+                builder.Add($"{nameof(aep.BeginUsing)}: {aep.Authority.ToFullKey()}");
             };
-            aep.FinalDispose += (sender, eUnk) =>
+            ((IAuthorityEpochProvider)aep).FinalDispose += (sender, e) =>
             {
-                if (eUnk is FinalDisposeEventArgs e)
-                {
-                    builder.Add($"{nameof(aep.FinalDispose)}: {aep.Authority.ToFullKey()} IsDisposing={aep.IsDisposing}");
-                }
+                builder.Add($"{nameof(aep.FinalDispose)}: {aep.Authority.ToFullKey()} IsDisposing={aep.IsDisposing}");
             };
+            #endregion I N T E R F A C E    E V E N T S
+
+            #region S P E C I A L I Z E D    E V E N T S
+            aep.BeginUsing += (sender, e) =>
+            {
+                // Access a specialized property that isn't available
+                // (without casting) on the explicit interface version.
+                builder.Add(
+                    $"{nameof(aep.BeginUsing)}: {((Enum)e.AutoDisposableContext.Sender).ToFullKey()}");
+            };
+            aep.FinalDispose += (sender, e) =>
+            {
+                // Access a specialized property that isn't available
+                // (without casting) on the explicit interface version.
+                builder.Add(
+                    $"{nameof(aep.BeginUsing)}: {string.Join(",", e.ReleasedSenders.OfType<Enum>().Select(_=>_.ToFullKey()))}");
+                builder.Add($"{nameof(aep.FinalDispose)}: {aep.Authority.ToFullKey()} IsDisposing={aep.IsDisposing}");
+            };
+            #endregion S P E C I A L I Z E D    E V E N T S
 
             subtest_BasicEpoch();
             subtest_BasicCancel();
@@ -147,8 +162,6 @@ BeginUsing: TestAuthority.A1";
                 Assert.IsTrue(aep.IsCancelled);
                 Assert.HasCount(0, builder);
             }
-
-
             #endregion S U B T E S T S
         }
     }

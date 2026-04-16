@@ -18,27 +18,46 @@ namespace IVSoftware.Portable.Disposable
             public AuthorityEpochProvider? Current { get; set; }
             protected override void OnBeginUsing(BeginUsingEventArgs e)
             {
-                if(e.AutoDisposableContext.Sender is Enum authority)
-                {
-                    Current?.Authority = authority;
-                }
-                else
-                {
-                    this.ThrowFramework<InvalidCastException>(
-                        $"Expecting an Enum that is the current authority.",
-                        @throw: true);
-                }
-                Current?.IsCancelled = false;
+                // No one is listening to the BC event; raise it anyway.
                 base.OnBeginUsing(e);
-                Current?.OnBeginUsing(e);
+
+                if (Current is not null)
+                {
+                    if (e.AutoDisposableContext.Sender is Enum authority)
+                    {
+                        Current.Authority = authority;
+                    }
+                    else
+                    {
+                        this.ThrowFramework<InvalidCastException>(
+                            $"Expecting an Enum that is the current authority.",
+                            @throw: true);
+                    }
+                    Current.IsCancelled = false;
+
+                    Current.OnBeginUsing(e);
+                    foreach (EventHandler handler in Current.BeginUsingInvocationList.ToArray())
+                    {
+                        handler?.Invoke(this, e);
+                    }
+                }
             }
             protected override void OnFinalDispose(FinalDisposeEventArgs e)
             {
-                Current?.IsDisposing = true;
+                // No one is listening to the BC event; raise it anyway.
+                base.OnFinalDispose(e);
+
                 try
                 {
-                    base.OnFinalDispose(e);
-                    Current?.OnFinalDispose(e);
+                    if (Current is not null)
+                    {
+                        Current.IsDisposing = true;
+                        Current.OnFinalDispose(e);
+                        foreach (EventHandler handler in Current.FinalDisposeInvocationList.ToArray())
+                        {
+                            handler?.Invoke(this, e);
+                        }
+                    }
                 }
                 finally
                 {
@@ -83,8 +102,8 @@ namespace IVSoftware.Portable.Disposable
 
         public bool IsCancelled { get; private set; }
 
-        public event EventHandler? BeginUsing;
-        public event EventHandler? FinalDispose;
+        public event EventHandler<BeginUsingEventArgs>? BeginUsing;
+        public event EventHandler<FinalDisposeEventArgs>? FinalDispose;
         public void CancelAuthorityEpoch(bool @throw)
         {
             IsCancelled = true;
@@ -111,16 +130,16 @@ namespace IVSoftware.Portable.Disposable
             add
             {
                 if (value is null) return;
-                lock (_eventLock) _beginUsingInvocationList.Add(value);
+                lock (_eventLock) BeginUsingInvocationList.Add(value);
             }
 
             remove
             {
                 if (value is null) return;
-                lock (_eventLock) _beginUsingInvocationList.Remove(value);
+                lock (_eventLock) BeginUsingInvocationList.Remove(value);
             }
         }
-        private readonly List<EventHandler> _beginUsingInvocationList = new();
+        private List<EventHandler> BeginUsingInvocationList { get; } = new();
 
 
         event EventHandler? IAuthorityEpochProvider.FinalDispose
@@ -128,16 +147,16 @@ namespace IVSoftware.Portable.Disposable
             add
             {
                 if (value is null) return;
-                lock (_eventLock) _finalDisposeInvocationList.Add(value);
+                lock (_eventLock) FinalDisposeInvocationList.Add(value);
             }
 
             remove
             {
                 if (value is null) return;
-                lock (_eventLock) _finalDisposeInvocationList.Remove(value);
+                lock (_eventLock) FinalDisposeInvocationList.Remove(value);
             }
         }
-        private readonly List<EventHandler> _finalDisposeInvocationList = new();
+        private List<EventHandler> FinalDisposeInvocationList { get; } = new();
         #endregion E V E N T S
     }
 }
