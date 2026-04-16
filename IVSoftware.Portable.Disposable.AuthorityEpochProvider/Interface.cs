@@ -109,7 +109,7 @@ namespace IVSoftware.Portable.Disposable
         new T Authority { get; }
         new T[] Authorities { get; }
 
-        IDisposable RequestAuthority(T authority);
+        IDisposable RequestAuthority(T authority, Dictionary<string, object>? properties = null);
         bool HasRequestedAuthority(T authority);
     }
 }
