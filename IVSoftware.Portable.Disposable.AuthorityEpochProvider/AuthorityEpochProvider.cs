@@ -102,5 +102,42 @@ namespace IVSoftware.Portable.Disposable
 
         public IDisposable RequestAuthority(Enum authority, Dictionary<string, object>? properties = null)
             => DHost.GetToken(sender: authority, properties);
+
+
+        #region E V E N T S
+        private object _eventLock = new();
+        event EventHandler? IAuthorityEpochProvider.BeginUsing
+        {
+            add
+            {
+                if (value is null) return;
+                lock (_eventLock) _beginUsingInvocationList.Add(value);
+            }
+
+            remove
+            {
+                if (value is null) return;
+                lock (_eventLock) _beginUsingInvocationList.Remove(value);
+            }
+        }
+        private readonly List<EventHandler> _beginUsingInvocationList = new();
+
+
+        event EventHandler? IAuthorityEpochProvider.FinalDispose
+        {
+            add
+            {
+                if (value is null) return;
+                lock (_eventLock) _finalDisposeInvocationList.Add(value);
+            }
+
+            remove
+            {
+                if (value is null) return;
+                lock (_eventLock) _finalDisposeInvocationList.Remove(value);
+            }
+        }
+        private readonly List<EventHandler> _finalDisposeInvocationList = new();
+        #endregion E V E N T S
     }
 }
