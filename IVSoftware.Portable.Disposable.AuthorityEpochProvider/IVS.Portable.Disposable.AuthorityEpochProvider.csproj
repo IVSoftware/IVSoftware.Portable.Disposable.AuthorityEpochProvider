@@ -66,6 +66,7 @@
 		<PackageReference Include="IVSoftware.Portable.Common" Version="*" />
 		<PackageReference Include="IVSoftware.Portable.Disposable" Version="*" />
 		<PackageReference Include="IVSoftware.Portable.Xml.Linq.XBoundObject" Version="*" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 	</ItemGroup>
 
 </Project>

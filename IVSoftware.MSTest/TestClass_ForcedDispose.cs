@@ -12,7 +12,15 @@ namespace IVSoftware.MSTest
     {
         enum TestAuthority1 { A, B, C,}
         enum TestAuthority2 { A, B, C,}
-
+        enum StdTestProperties
+        {
+            Array,
+            Json,
+        }
+        class JsonTestSerialize
+        {
+            public string? Text{ get; set; }
+        }
 
         [TestMethod]
         public void Test_MakeFriend()
@@ -213,6 +221,9 @@ TestAuthority1.C";
         {
             string actual, expected;
 
+            AuthorityEpochProvider<TestAuthority1> aep = new();
+            var builder = new List<string?>();
+
             #region L o c a l F x
             var builderThrow = new List<string>();
             void localOnBeginThrowOrAdvise(object? sender, Throw e)
@@ -231,9 +242,6 @@ TestAuthority1.C";
                 {
                     Throw.BeginThrowOrAdvise -= localOnBeginThrowOrAdvise;
                 });
-
-            AuthorityEpochProvider<TestAuthority1> aep = new();
-            var builder = new List<string?>();
 
             #region S P E C I A L I Z E D    E V E N T S
             aep.BeginUsing += (sender, e) =>
@@ -416,6 +424,106 @@ TestAuthority1.C";
                 Assert.HasCount(0, builder);
             }
             #endregion S U B T E S T S
+        }
+
+        [TestMethod]
+        public void Test_ReleasedSenders()
+        {
+            string actual, expected;
+
+            AuthorityEpochProvider<TestAuthority2> aep = new();
+            var builder = new List<string?>();
+            var jsonObject = new JsonTestSerialize { Text = "Marklar" };
+
+            aep.FinalDispose += (sender, e) =>
+            {
+                // Disposable host, by design:
+                // 1. Takes a snapshot of itself
+                // 2. Clear itself
+                // 3. Places the immutable snapshot in the event.
+                actual = JsonConvert.SerializeObject(e, Formatting.Indented);
+                actual.ToClipboardExpected();
+                { } // <- FIRST TIME ONLY: Adjust the message.
+                actual.ToClipboardAssert("Expecting snapshot.");
+                { }
+                expected = @" 
+{
+  ""ReleasedSenders"": [
+    0,
+    1,
+    2
+  ],
+  ""KeyCount"": 2,
+  ""Keys"": [
+    ""StdTestProperties.Array"",
+    ""StdTestProperties.Json""
+  ],
+  ""Values"": [
+    [
+      ""Dogs"",
+      ""Cats"",
+      ""Pets""
+    ],
+    ""{\""Text\"":\""Marklar\""}""
+  ]
+}";
+
+                Assert.AreEqual(
+                    expected.NormalizeResult(),
+                    actual.NormalizeResult(),
+                    "Expecting snapshot."
+                );
+                actual = JsonConvert.SerializeObject(aep, Formatting.Indented);
+                actual.ToClipboardExpected();
+                { }
+                expected = @" 
+{}";
+
+                Assert.AreEqual(
+                    expected.NormalizeResult(),
+                    actual.NormalizeResult(),
+                    "Expecting empty."
+                );
+            };
+            using(aep.RequestAuthority(TestAuthority2.A, new Dictionary<string, object> 
+            {
+                {StdTestProperties.Array.ToFullKey(), new []{"Dogs", "Cats", "Pets" } }
+            }))
+            using(aep.RequestAuthority(TestAuthority2.B, new Dictionary<string, object>
+            {
+                {StdTestProperties.Json.ToFullKey(), JsonConvert.SerializeObject(jsonObject) }
+            }))
+            using (aep.RequestAuthority(TestAuthority2.C))
+            {
+
+                actual = JsonConvert.SerializeObject(aep, Formatting.Indented);
+                actual.ToClipboardExpected();
+                { }
+                expected = @" 
+{
+  ""StdTestProperties.Array"": [
+    ""Dogs"",
+    ""Cats"",
+    ""Pets""
+  ],
+  ""StdTestProperties.Json"": ""{\""Text\"":\""Marklar\""}""
+}";
+
+                Assert.AreEqual(
+                    expected.NormalizeResult(),
+                    actual.NormalizeResult(),
+                    "Expecting serialization as [JsonDictionary]"
+                );
+            }
+        }
+
+        [TestMethod]
+        public void Test_Dictionary()
+        {
+            string actual, expected;
+
+            AuthorityEpochProvider<TestAuthority1> aep = new();
+            var builder = new List<string?>();
         }
     }
 }

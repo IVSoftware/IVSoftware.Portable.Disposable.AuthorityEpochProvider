@@ -1,12 +1,14 @@
 ﻿using IVSoftware.Portable.Common.Exceptions;
 using IVSoftware.Portable.Xml.Linq.XBoundObject;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace IVSoftware.Portable.Disposable
 {
-    public class AuthorityEpochProvider : IAuthorityEpochProvider
+    [JsonDictionary]
+    public partial class AuthorityEpochProvider : IAuthorityEpochProvider
     {
         public AuthorityEpochProvider() => DHost = new(this);
         private class DHostAuthorityProvider : DisposableHost 
