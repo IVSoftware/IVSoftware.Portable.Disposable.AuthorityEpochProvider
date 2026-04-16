@@ -314,7 +314,7 @@ TestAuthority1.C";
                 Assert.IsFalse(aep.IsCancelled);
                 Assert.IsFalse(aep.IsDisposing);
                 Assert.IsTrue(aep.IsZero());
-                Assert.AreEqual(AuthorityReserved.NoAuthority, aep.Authority);
+                Assert.AreEqual((TestAuthority1)AuthorityReserved.NoAuthority, aep.Authority);
             }
 
             void subtest_BasicCancel()
@@ -414,7 +414,7 @@ TestAuthority1.C";
                         aep.CancelAuthorityEpoch(@throw: false);
 
                         Assert.IsTrue(aep.IsZero());
-                        Assert.AreEqual(AuthorityReserved.NoAuthority, aep.Authority);
+                        Assert.AreEqual((TestAuthority1)AuthorityReserved.NoAuthority, aep.Authority);
                         Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority1.A));
                         Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority1.B));
                         Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority1.C));

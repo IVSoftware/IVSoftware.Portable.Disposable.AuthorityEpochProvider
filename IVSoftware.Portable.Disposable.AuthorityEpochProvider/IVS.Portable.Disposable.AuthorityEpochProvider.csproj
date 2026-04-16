@@ -51,7 +51,11 @@
 			* Confirms awaitable behavior aligned with epoch completion.
 
 			Version 1.0.2
-			* Adds default: void CancelAuthorityEpoch(bool @throw = false)
+
+			* Adds a default value for the CancelAuthorityEpoch @throw parameter (@throw = false).
+			* Promotes generic Authority and Authorities to public members for better discoverability.
+			* Reduces reliance on explicit interface access for common scenarios.
+			* No breaking changes.
 
 		</PackageReleaseNotes>
 
