@@ -40,34 +40,33 @@ namespace IVSoftware.MSTest
 
             var builder = new List<string?>();
 
-            #region I N T E R F A C E    E V E N T S
-            ((IAuthorityEpochProvider)aep).BeginUsing += (sender, e) =>
-            {
-                builder.Add($"{nameof(aep.BeginUsing)}: {aep.Authority.ToFullKey()}");
-            };
-            ((IAuthorityEpochProvider)aep).FinalDispose += (sender, e) =>
-            {
-                builder.Add($"{nameof(aep.FinalDispose)}: {aep.Authority.ToFullKey()} IsDisposing={aep.IsDisposing}");
-            };
-            #endregion I N T E R F A C E    E V E N T S
-
             #region S P E C I A L I Z E D    E V E N T S
             aep.BeginUsing += (sender, e) =>
             {
                 // Access a specialized property that isn't available
                 // (without casting) on the explicit interface version.
                 builder.Add(
-                    $"{nameof(aep.BeginUsing)}: {((Enum)e.AutoDisposableContext.Sender).ToFullKey()}");
+                    $"1. {nameof(aep.BeginUsing)}: {((Enum)e.AutoDisposableContext.Sender).ToFullKey()}");
             };
             aep.FinalDispose += (sender, e) =>
             {
                 // Access a specialized property that isn't available
                 // (without casting) on the explicit interface version.
                 builder.Add(
-                    $"{nameof(aep.BeginUsing)}: {string.Join(",", e.ReleasedSenders.OfType<Enum>().Select(_=>_.ToFullKey()))}");
-                builder.Add($"{nameof(aep.FinalDispose)}: {aep.Authority.ToFullKey()} IsDisposing={aep.IsDisposing}");
+                    $"1. {nameof(aep.BeginUsing)}: {string.Join(",", e.ReleasedSenders.OfType<Enum>().Select(_=>_.ToFullKey()))}");
             };
             #endregion S P E C I A L I Z E D    E V E N T S
+
+            #region I N T E R F A C E    E V E N T S
+            ((IAuthorityEpochProvider)aep).BeginUsing += (sender, e) =>
+            {
+                builder.Add($"2. {nameof(aep.BeginUsing)}: {aep.Authority.ToFullKey()}");
+            };
+            ((IAuthorityEpochProvider)aep).FinalDispose += (sender, e) =>
+            {
+                builder.Add($"2. {nameof(aep.FinalDispose)}: {aep.Authority.ToFullKey()} IsDisposing={aep.IsDisposing}");
+            };
+            #endregion I N T E R F A C E    E V E N T S
 
             subtest_BasicEpoch();
             subtest_BasicCancel();
@@ -82,7 +81,9 @@ namespace IVSoftware.MSTest
                     actual.ToClipboardExpected();
                     { }
                     expected = @" 
-BeginUsing: TestAuthority.A1";
+1. BeginUsing: TestAuthority.A1
+2. BeginUsing: TestAuthority.A1"
+                    ;
 
                     Assert.AreEqual(
                         expected.NormalizeResult(),
@@ -94,7 +95,8 @@ BeginUsing: TestAuthority.A1";
                 actual.ToClipboardExpected();
                 { }
                 expected = @" 
-FinalDispose: TestAuthority.A1 IsDisposing=True"
+1. BeginUsing: TestAuthority.A1
+2. FinalDispose: TestAuthority.A1 IsDisposing=True"
                 ;
                 Assert.AreEqual(
                     expected.NormalizeResult(),
@@ -107,6 +109,7 @@ FinalDispose: TestAuthority.A1 IsDisposing=True"
                 Assert.IsTrue(aep.IsZero());
                 Assert.AreEqual(AuthorityReserved.NoAuthority, aep.Authority);
             }
+
             void subtest_BasicCancel()
             {
                 using (aep.RequestAuthority(TestAuthority.A1))
@@ -115,7 +118,9 @@ FinalDispose: TestAuthority.A1 IsDisposing=True"
                     actual.ToClipboardExpected();
                     { }
                     expected = @" 
-BeginUsing: TestAuthority.A1";
+1. BeginUsing: TestAuthority.A1
+2. BeginUsing: TestAuthority.A1"
+                    ;
 
                     Assert.AreEqual(
                         expected.NormalizeResult(),
