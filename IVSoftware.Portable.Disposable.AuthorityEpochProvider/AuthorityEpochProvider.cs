@@ -21,7 +21,14 @@ namespace IVSoftware.Portable.Disposable
                 // No one is listening to the BC event; raise it anyway.
                 base.OnBeginUsing(e);
 
-                if (Current is not null)
+                if (Current is null)
+                {   /* G T K - N O O P */
+                    // Indicates cancellation.
+                    // This derelict host is abandoned by its epoch: existing tokens
+                    // continue to dispose normally as their using scopes exit,
+                    // but no further events are raised on the main instance.
+                }
+                else
                 {
                     if (e.AutoDisposableContext.Sender is Enum authority)
                     {
@@ -42,6 +49,11 @@ namespace IVSoftware.Portable.Disposable
                     }
                 }
             }
+            protected override void OnCountChanged(CountChangedEventArgs e)
+            {
+                base.OnCountChanged(e);
+                Current?.OnCountChanged(e);
+            }
             protected override void OnFinalDispose(FinalDisposeEventArgs e)
             {
                 // No one is listening to the BC event; raise it anyway.
@@ -49,7 +61,14 @@ namespace IVSoftware.Portable.Disposable
 
                 try
                 {
-                    if (Current is not null)
+                    if (Current is null)
+                    {   /* G T K - N O O P */
+                    // Indicates cancellation.
+                    // This derelict host is abandoned by its epoch: existing tokens
+                    // continue to dispose normally as their using scopes exit,
+                    // but no further events are raised on the main instance.
+                }
+                    else
                     {
                         Current.IsDisposing = true;
                         Current.OnFinalDispose(e);
@@ -66,9 +85,15 @@ namespace IVSoftware.Portable.Disposable
                 }
             }
         }
+
         protected virtual void OnBeginUsing(BeginUsingEventArgs e) 
         {
             BeginUsing?.Invoke(this, e);
+        }
+
+        protected virtual void OnCountChanged(CountChangedEventArgs e)
+        {
+            CountChanged?.Invoke(this, e);
         }
         protected virtual void OnFinalDispose(FinalDisposeEventArgs e)
         {
@@ -102,7 +127,9 @@ namespace IVSoftware.Portable.Disposable
 
         public bool IsCancelled { get; private set; }
 
+        // Native DisposableHost events.
         public event EventHandler<BeginUsingEventArgs>? BeginUsing;
+        public event EventHandler<CountChangedEventArgs>? CountChanged;
         public event EventHandler<FinalDisposeEventArgs>? FinalDispose;
         public void CancelAuthorityEpoch(bool @throw)
         {

@@ -8,7 +8,8 @@ namespace IVSoftware.MSTest
     [TestClass]
     public sealed class TestClass_ForcedDispose
     {
-        enum TestAuthority { A1, A2, A3,}
+        enum TestAuthority1 { A, B, C,}
+        enum TestAuthority2 { A, B, C,}
 
 
         [TestMethod]
@@ -37,7 +38,6 @@ namespace IVSoftware.MSTest
             string actual, expected;
 
             AuthorityEpochProvider aep = new();
-
             var builder = new List<string?>();
 
             #region S P E C I A L I Z E D    E V E N T S
@@ -48,6 +48,9 @@ namespace IVSoftware.MSTest
                 builder.Add(
                     $"1. {nameof(aep.BeginUsing)}: {((Enum)e.AutoDisposableContext.Sender).ToFullKey()} IsDisposing={aep.IsDisposing}");
             };
+
+            int countChangedMonitor = 0;
+            aep.CountChanged += (sender, e) => countChangedMonitor++;
             aep.FinalDispose += (sender, e) =>
             {
                 // Access a specialized property that isn't available
@@ -75,14 +78,14 @@ namespace IVSoftware.MSTest
 
             void subtest_BasicEpoch()
             {
-                using (aep.RequestAuthority(TestAuthority.A1))
+                using (aep.RequestAuthority(TestAuthority1.A))
                 {
                     actual = string.Join(Environment.NewLine, builder); builder.Clear();
                     actual.ToClipboardExpected();
                     { }
                     expected = @" 
-1. BeginUsing: TestAuthority.A1 IsDisposing=False
-2. BeginUsing: TestAuthority.A1 IsDisposing=False"
+1. BeginUsing: TestAuthority1.A IsDisposing=False
+2. BeginUsing: TestAuthority1.A IsDisposing=False"
                     ;
 
                     Assert.AreEqual(
@@ -95,8 +98,8 @@ namespace IVSoftware.MSTest
                 actual.ToClipboardExpected();
                 { }
                 expected = @" 
-1. FinalDispose: TestAuthority.A1 IsDisposing=True
-2. FinalDispose: TestAuthority.A1 IsDisposing=True"
+1. FinalDispose: TestAuthority1.A IsDisposing=True
+2. FinalDispose: TestAuthority1.A IsDisposing=True"
                 ;
                 Assert.AreEqual(
                     expected.NormalizeResult(),
@@ -112,14 +115,15 @@ namespace IVSoftware.MSTest
 
             void subtest_BasicCancel()
             {
-                using (aep.RequestAuthority(TestAuthority.A1))
+                // Request (granted)
+                using (aep.RequestAuthority(TestAuthority1.A))
                 {
                     actual = string.Join(Environment.NewLine, builder); builder.Clear();
                     actual.ToClipboardExpected();
                     { }
                     expected = @" 
-1. BeginUsing: TestAuthority.A1 IsDisposing=False
-2. BeginUsing: TestAuthority.A1 IsDisposing=False"
+1. BeginUsing: TestAuthority1.A IsDisposing=False
+2. BeginUsing: TestAuthority1.A IsDisposing=False"
                     ;
 
                     Assert.AreEqual(
@@ -128,41 +132,52 @@ namespace IVSoftware.MSTest
                         "Expecting parity for 1 event each on specialized and interface connection points."
                     );
 
-                    Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority.A1.ToFullKey());
-                    Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A1));
+                    Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority1.A.ToFullKey());
+                    Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.A));
 
-                    using (aep.RequestAuthority(TestAuthority.A2))
+                    // Registered, but not granted.
+                    countChangedMonitor = 0;
+                    using (aep.RequestAuthority(TestAuthority2.B))
                     {
+                        Assert.AreEqual(1, countChangedMonitor, "Expecting count change."); countChangedMonitor = 0;
                         Assert.HasCount(0, builder);
-                        Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority.A1.ToFullKey());
-                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A2));
+                        Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority1.A.ToFullKey());
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority2.B));
                     }
+                    Assert.AreEqual(1, countChangedMonitor, "Expecting count change."); countChangedMonitor = 0;
 
-                    using (aep.RequestAuthority(TestAuthority.A3))
+                    // Registered, but not granted.
+                    countChangedMonitor = 0;
+                    using (aep.RequestAuthority(TestAuthority1.C))
                     {
+                        Assert.AreEqual(1, countChangedMonitor, "Expecting count change."); countChangedMonitor = 0;
                         Assert.HasCount(0, builder);
-                        Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority.A1.ToFullKey());
-                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority.A2)); // Relinquished = disposed.
-                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A3));
+                        Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority1.A.ToFullKey());
+                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority2.B)); // Relinquished = disposed.
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.C));
                     }
+                    Assert.AreEqual(1, countChangedMonitor, "Expecting count change."); countChangedMonitor = 0;
 
-                    using (aep.RequestAuthority(TestAuthority.A2))
-                    using (aep.RequestAuthority(TestAuthority.A3))
+                    // Registered, but not granted.
+                    using (aep.RequestAuthority(TestAuthority1.B))
+                    using (aep.RequestAuthority(TestAuthority1.C))
                     {
+                        Assert.AreEqual(2, countChangedMonitor, "Expecting count change."); countChangedMonitor = 0;
                         Assert.HasCount(0, builder);
-                        Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority.A1.ToFullKey());
-                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A1));
-                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A2));
-                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority.A3));
+                        Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority1.A.ToFullKey());
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.A));
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.B));
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.C));
 
                         aep.CancelAuthorityEpoch(@throw: false);
 
                         Assert.IsTrue(aep.IsZero());
                         Assert.AreEqual(AuthorityReserved.NoAuthority, aep.Authority);
-                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority.A1));
-                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority.A2));
-                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority.A3));
+                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority1.A));
+                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority1.B));
+                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority1.C));
                     }
+                    Assert.AreEqual(0, countChangedMonitor, "Expecting *no* count change."); countChangedMonitor = 0;
                 }
                 Assert.IsTrue(aep.IsCancelled);
                 Assert.HasCount(0, builder);
