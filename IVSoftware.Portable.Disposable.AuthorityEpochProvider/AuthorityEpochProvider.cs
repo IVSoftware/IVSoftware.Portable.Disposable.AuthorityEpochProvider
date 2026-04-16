@@ -20,6 +20,7 @@ namespace IVSoftware.Portable.Disposable
                 Current = current;
             }
             public AuthorityEpochProvider? Current { get; set; }
+            public TaskCompletionSource<Enum>? TCS { get; private set; }
             protected override void OnBeginUsing(BeginUsingEventArgs e)
             {
                 // No one is listening to the BC event; raise it anyway.
@@ -34,7 +35,7 @@ namespace IVSoftware.Portable.Disposable
                 }
                 else
                 {
-                    Current.TCS = new TaskCompletionSource<Enum>(
+                    TCS = new TaskCompletionSource<Enum>(
                         TaskCreationOptions.RunContinuationsAsynchronously);
                     if (e.AutoDisposableContext.Sender is Enum authority)
                     {
@@ -87,7 +88,7 @@ namespace IVSoftware.Portable.Disposable
                 finally
                 {
                     Current?.IsDisposing = false;
-                    Current?.TCS?.SetResult(Current?.Authority ?? AuthorityReserved.NoAuthority);
+                    TCS?.TrySetResult(Current?.Authority ?? AuthorityReserved.NoAuthority);
                     Current?.Authority = AuthorityReserved.NoAuthority; 
                 }
             }
@@ -142,10 +143,10 @@ namespace IVSoftware.Portable.Disposable
         {
             IsCancelled = true;
             DHost.Current = null;
+            TCS?.TrySetCanceled();
             DHost = new (this);
             var msg = $"{Authority.ToFullKey()} authority epoch has been cancelled.";
             Authority = AuthorityReserved.NoAuthority;
-            TCS?.SetCanceled();
             if(@throw) throw new OperationCanceledException(msg);
         }
 
@@ -158,7 +159,7 @@ namespace IVSoftware.Portable.Disposable
             => DHost.GetToken(sender: authority, properties);
         #region A W A I T
         TaskCompletionSource<Enum>? _tcs = default;
-        private TaskCompletionSource<Enum>? TCS { get; set; }
+        private TaskCompletionSource<Enum>? TCS => DHost.TCS;
         public TaskAwaiter<Enum> GetAwaiter()
         {
             return (TCS?.Task ?? Task.FromResult(Authority)).GetAwaiter();

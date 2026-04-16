@@ -526,9 +526,12 @@ TestAuthority1.C";
             AuthorityEpochProvider<TestAuthority1> aep = new();
             var builder = new List<string?>();
 
-            await aep;
-
             var stopwatch = Stopwatch.StartNew();
+            await aep;
+            stopwatch.Stop();
+            Assert.IsLessThan(upperBound:TimeSpan.FromMilliseconds(50), stopwatch.Elapsed);
+            stopwatch.Restart();
+
             TaskCompletionSource ensureTestStart = new();
             _ = Task.Run(async () =>
             {
@@ -540,8 +543,21 @@ TestAuthority1.C";
             });
             await ensureTestStart.Task;
             await aep;
+
             stopwatch.Stop();
-            Assert.IsGreaterThan(TimeSpan.FromSeconds(1), stopwatch.Elapsed);
+            Assert.IsGreaterThan(lowerBound: TimeSpan.FromSeconds(1), stopwatch.Elapsed);
+
+            actual = stopwatch.Elapsed.ToString(@"hh\:mm\:ss");
+            actual.ToClipboardExpected();
+            { } // < Capture a value here as 'typical' although we can't test against it exactly.
+            expected = @" 
+00:00:01";
+
+            Assert.AreEqual(
+                expected.NormalizeResult(),
+                actual.NormalizeResult(),
+                "Expecting ONE SECOND (floor via truncation)"
+            );
         }
     }
 }
