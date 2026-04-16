@@ -532,16 +532,16 @@ TestAuthority1.C";
             TaskCompletionSource ensureTestStart = new();
             _ = Task.Run(async () =>
             {
-                ensureTestStart.SetResult();
                 using (aep.RequestAuthority(TestAuthority1.A))
                 {
+                    ensureTestStart.SetResult();
                     await Task.Delay(TimeSpan.FromSeconds(1));
                 }
             });
             await ensureTestStart.Task;
             await aep;
             stopwatch.Stop();
-            { }
+            Assert.IsGreaterThan(TimeSpan.FromSeconds(1), stopwatch.Elapsed);
         }
     }
 }
