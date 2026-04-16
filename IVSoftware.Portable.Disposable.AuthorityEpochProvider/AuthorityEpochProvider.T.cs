@@ -12,9 +12,9 @@ namespace IVSoftware.Portable.Disposable
         , IAuthorityEpochProvider<T>
         where T : struct, Enum
     {
-        T IAuthorityEpochProvider<T>.Authority => (T)base.Authority;
+        public new T Authority => (T)base.Authority;
 
-        T[] IAuthorityEpochProvider<T>.Authorities => [.. base.Authorities.Cast<T>()];
+        public new T[] Authorities => [.. base.Authorities.Cast<T>()];
 
         public bool HasRequestedAuthority(T authority) => base.HasRequestedAuthority(authority);
 

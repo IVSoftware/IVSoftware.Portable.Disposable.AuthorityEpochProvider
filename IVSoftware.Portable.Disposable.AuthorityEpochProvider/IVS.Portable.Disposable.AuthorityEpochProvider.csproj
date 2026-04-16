@@ -28,7 +28,7 @@
 
 		<FileVersion>$(AssemblyVersion)</FileVersion>
 		<Version>$(AssemblyVersion)</Version>
-		<BaseVersion>1.0.1</BaseVersion>
+		<BaseVersion>1.0.2</BaseVersion>
 		<VersionPrefix>$(BaseVersion)</VersionPrefix>
 
 		<PackageReadmeFile>README.md</PackageReadmeFile>
@@ -41,7 +41,7 @@
 			* Introduces IAuthorityEpochProvider for coordinated authority-based epochs.
 			* Establishes first-wins authority model with ordered participation tracking.
 			* Integrates with DisposableHost for deterministic FinalDispose semantics.
-			* Supports cancellation of FinalDispose event without interrupting epoch teardown.	
+			* Supports cancellation of FinalDispose event without interrupting epoch teardown.
 
 			Version 1.0.1
 
@@ -49,6 +49,13 @@
 			* Expands test coverage for cancellation, mixed authority scenarios, and lifecycle invariants.
 			* Validates dictionary-backed context aggregation and FinalDispose snapshot semantics.
 			* Confirms awaitable behavior aligned with epoch completion.
+
+			Version 1.0.2
+
+			* Adds a default value for the CancelAuthorityEpoch @throw parameter (@throw = false).
+			* Promotes generic Authority and Authorities to public members for better discoverability.
+			* Reduces reliance on explicit interface access for common scenarios.
+			* No breaking changes.
 
 		</PackageReleaseNotes>
 
