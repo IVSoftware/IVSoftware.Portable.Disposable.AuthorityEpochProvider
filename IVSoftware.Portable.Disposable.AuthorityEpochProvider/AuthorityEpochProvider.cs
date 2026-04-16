@@ -89,6 +89,7 @@ namespace IVSoftware.Portable.Disposable
                 {
                     Current?.IsDisposing = false;
                     TCS?.TrySetResult(Current?.Authority ?? AuthorityReserved.NoAuthority);
+                    TCS = null;
                     Current?.Authority = AuthorityReserved.NoAuthority; 
                 }
             }
