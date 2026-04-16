@@ -1,7 +1,9 @@
 ﻿using IVSoftware.Portable.Common;
+using IVSoftware.Portable.Common.Exceptions;
 using IVSoftware.Portable.Disposable;
 using IVSoftware.Portable.Xml.Linq.XBoundObject;
 using IVSoftware.WinOS.MSTest.Extensions;
+using Newtonsoft.Json;
 
 namespace IVSoftware.MSTest
 {
@@ -32,6 +34,9 @@ namespace IVSoftware.MSTest
             );
         }
 
+        /// <summary>
+        /// Excercise authorities with mixed types.
+        /// </summary>
         [TestMethod]
         public void Test_BasicAuthorityEpoch()
         {
@@ -159,6 +164,219 @@ namespace IVSoftware.MSTest
                     Assert.AreEqual(1, countChangedMonitor, "Expecting count change."); countChangedMonitor = 0;
 
                     // Registered, but not granted.
+                    using (aep.RequestAuthority(TestAuthority2.B))
+                    using (aep.RequestAuthority(TestAuthority1.C))
+                    {
+                        Assert.AreEqual(2, countChangedMonitor, "Expecting count change."); countChangedMonitor = 0;
+                        Assert.HasCount(0, builder);
+                        Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority1.A.ToFullKey());
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.A));
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority2.B));
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.C));
+
+
+                        actual = string.Join(Environment.NewLine, aep.Authorities.Select(_=>_.ToFullKey()));
+                        actual.ToClipboardExpected();
+                        { }
+                        expected = @" 
+TestAuthority1.A
+TestAuthority2.B
+TestAuthority1.C";
+
+                        Assert.AreEqual(
+                            expected.NormalizeResult(),
+                            actual.NormalizeResult(),
+                            "Expecting authority type mix (this would not be possible with AuthorityProvider<T>)."
+                        );
+
+                        aep.CancelAuthorityEpoch(@throw: false);
+
+                        Assert.IsTrue(aep.IsZero());
+                        Assert.AreEqual(AuthorityReserved.NoAuthority, aep.Authority);
+                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority1.A));
+                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority2.B));
+                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority1.C));
+                    }
+                    Assert.AreEqual(0, countChangedMonitor, "Expecting *no* count change."); countChangedMonitor = 0;
+                }
+                Assert.IsTrue(aep.IsCancelled);
+                Assert.HasCount(0, builder);
+            }
+            #endregion S U B T E S T S
+        }
+
+        /// <summary>
+        /// Excercise authorities where with mixed types raise runtime cast exceptions.
+        /// </summary>
+        [TestMethod]
+        public void Test_BasicAuthorityEpochT()
+        {
+            string actual, expected;
+
+            #region L o c a l F x
+            var builderThrow = new List<string>();
+            void localOnBeginThrowOrAdvise(object? sender, Throw e)
+            {
+                builderThrow.Add($"{e.Mode}: {e.Message}");
+                e.Handled = true;
+            }
+            #endregion L o c a l F x
+
+            using var local = this.WithOnDispose(
+                onInit: (sender, e) =>
+                {
+                    Throw.BeginThrowOrAdvise += localOnBeginThrowOrAdvise;
+                },
+                onDispose: (sender, e) =>
+                {
+                    Throw.BeginThrowOrAdvise -= localOnBeginThrowOrAdvise;
+                });
+
+            AuthorityEpochProvider<TestAuthority1> aep = new();
+            var builder = new List<string?>();
+
+            #region S P E C I A L I Z E D    E V E N T S
+            aep.BeginUsing += (sender, e) =>
+            {
+                // Access a specialized property that isn't available
+                // (without casting) on the explicit interface version.
+                builder.Add(
+                    $"1. {nameof(aep.BeginUsing)}: {((Enum)e.AutoDisposableContext.Sender).ToFullKey()} IsDisposing={aep.IsDisposing}");
+            };
+
+            int countChangedMonitor = 0;
+            aep.CountChanged += (sender, e) => countChangedMonitor++;
+            aep.FinalDispose += (sender, e) =>
+            {
+                // Access a specialized property that isn't available
+                // (without casting) on the explicit interface version.
+                builder.Add(
+                    $"1. {nameof(aep.FinalDispose)}: {string.Join(",", e.ReleasedSenders.OfType<Enum>().Select(_ => _.ToFullKey()))} IsDisposing={aep.IsDisposing}");
+            };
+            #endregion S P E C I A L I Z E D    E V E N T S
+
+            #region I N T E R F A C E    E V E N T S
+            ((IAuthorityEpochProvider)aep).BeginUsing += (sender, e) =>
+            {
+                builder.Add($"2. {nameof(aep.BeginUsing)}: {aep.Authority.ToFullKey()} IsDisposing={aep.IsDisposing}");
+            };
+            ((IAuthorityEpochProvider)aep).FinalDispose += (sender, e) =>
+            {
+                builder.Add($"2. {nameof(aep.FinalDispose)}: {aep.Authority.ToFullKey()} IsDisposing={aep.IsDisposing}");
+            };
+            #endregion I N T E R F A C E    E V E N T S
+
+            subtest_BasicEpoch();
+            subtest_BasicCancel();
+
+            #region S U B T E S T S
+
+            void subtest_BasicEpoch()
+            {
+                using (aep.RequestAuthority(TestAuthority1.A))
+                {
+                    actual = string.Join(Environment.NewLine, builder); builder.Clear();
+                    actual.ToClipboardExpected();
+                    { }
+                    expected = @" 
+1. BeginUsing: TestAuthority1.A IsDisposing=False
+2. BeginUsing: TestAuthority1.A IsDisposing=False"
+                    ;
+
+                    Assert.AreEqual(
+                        expected.NormalizeResult(),
+                        actual.NormalizeResult(),
+                        "Expecting parity for 1 event each on specialized and interface connection points."
+                    );
+                }
+                actual = string.Join(Environment.NewLine, builder); builder.Clear();
+                actual.ToClipboardExpected();
+                { }
+                expected = @" 
+1. FinalDispose: TestAuthority1.A IsDisposing=True
+2. FinalDispose: TestAuthority1.A IsDisposing=True"
+                ;
+                Assert.AreEqual(
+                    expected.NormalizeResult(),
+                    actual.NormalizeResult(),
+                        "Expecting parity for 1 event each on specialized and interface connection points."
+                );
+
+                Assert.IsFalse(aep.IsCancelled);
+                Assert.IsFalse(aep.IsDisposing);
+                Assert.IsTrue(aep.IsZero());
+                Assert.AreEqual(AuthorityReserved.NoAuthority, aep.Authority);
+            }
+
+            void subtest_BasicCancel()
+            {
+                // Request (granted)
+                using (aep.RequestAuthority(TestAuthority1.A))
+                {
+                    actual = string.Join(Environment.NewLine, builder); builder.Clear();
+                    actual.ToClipboardExpected();
+                    { }
+                    expected = @" 
+1. BeginUsing: TestAuthority1.A IsDisposing=False
+2. BeginUsing: TestAuthority1.A IsDisposing=False"
+                    ;
+
+                    Assert.AreEqual(
+                        expected.NormalizeResult(),
+                        actual.NormalizeResult(),
+                        "Expecting parity for 1 event each on specialized and interface connection points."
+                    );
+
+                    Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority1.A.ToFullKey());
+                    Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.A));
+
+                    // Runtime cast exception.
+                    countChangedMonitor = 0;
+                    using (aep.RequestAuthority(TestAuthority2.B))
+                    {
+                        actual = string.Join(Environment.NewLine, builderThrow); builderThrow.Clear();
+                        actual.ToClipboardExpected();
+                        { }
+                        expected = @" 
+ThrowHard: Requested authority must be of type TestAuthority1";
+
+                        Assert.AreEqual(
+                            expected.NormalizeResult(),
+                            actual.NormalizeResult(),
+                            "Expecting Throw which we handle."
+                        );
+                        Assert.AreEqual(
+                            0, 
+                            countChangedMonitor,
+                            "Expecting *no* count change due to exception."); 
+                        countChangedMonitor = 0;
+                        Assert.HasCount(0, builder);
+                        Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority1.A.ToFullKey());
+                        Assert.IsFalse(
+                            aep.HasRequestedAuthority(TestAuthority2.B),
+                            $"Expecting *no* grant of authority for invalid enum type"
+                        );
+                    }
+                    Assert.AreEqual(
+                        0, 
+                        countChangedMonitor, 
+                        "Expecting *no* count change. No token means no dispose."); 
+                    countChangedMonitor = 0;
+
+                    // Registered, but not granted.
+                    countChangedMonitor = 0;
+                    using (aep.RequestAuthority(TestAuthority1.C))
+                    {
+                        Assert.AreEqual(1, countChangedMonitor, "Expecting count change."); countChangedMonitor = 0;
+                        Assert.HasCount(0, builder);
+                        Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority1.A.ToFullKey());
+                        Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority2.B)); // Relinquished = disposed.
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.C));
+                    }
+                    Assert.AreEqual(1, countChangedMonitor, "Expecting count change."); countChangedMonitor = 0;
+
+                    // Try again. This time, do not mix the types.
+                    // Registered, but not granted.
                     using (aep.RequestAuthority(TestAuthority1.B))
                     using (aep.RequestAuthority(TestAuthority1.C))
                     {
@@ -168,6 +386,21 @@ namespace IVSoftware.MSTest
                         Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.A));
                         Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.B));
                         Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.C));
+
+
+                        actual = string.Join(Environment.NewLine, aep.Authorities.Select(_ => _.ToFullKey()));
+                        actual.ToClipboardExpected();
+                        { }
+                        expected = @" 
+TestAuthority1.A
+TestAuthority1.B
+TestAuthority1.C";
+
+                        Assert.AreEqual(
+                            expected.NormalizeResult(),
+                            actual.NormalizeResult(),
+                            "Expecting authority type mix (this would not be possible with AuthorityProvider<T>)."
+                        );
 
                         aep.CancelAuthorityEpoch(@throw: false);
 
