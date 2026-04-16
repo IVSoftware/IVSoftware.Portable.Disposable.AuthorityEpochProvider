@@ -4,6 +4,8 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace IVSoftware.Portable.Disposable
 {
@@ -32,6 +34,8 @@ namespace IVSoftware.Portable.Disposable
                 }
                 else
                 {
+                    Current.TCS = new TaskCompletionSource<Enum>(
+                        TaskCreationOptions.RunContinuationsAsynchronously);
                     if (e.AutoDisposableContext.Sender is Enum authority)
                     {
                         Current.Authority = authority;
@@ -65,11 +69,11 @@ namespace IVSoftware.Portable.Disposable
                 {
                     if (Current is null)
                     {   /* G T K - N O O P */
-                    // Indicates cancellation.
-                    // This derelict host is abandoned by its epoch: existing tokens
-                    // continue to dispose normally as their using scopes exit,
-                    // but no further events are raised on the main instance.
-                }
+                        // Indicates cancellation.
+                        // This derelict host is abandoned by its epoch: existing tokens
+                        // continue to dispose normally as their using scopes exit,
+                        // but no further events are raised on the main instance.
+                    }
                     else
                     {
                         Current.IsDisposing = true;
@@ -83,7 +87,8 @@ namespace IVSoftware.Portable.Disposable
                 finally
                 {
                     Current?.IsDisposing = false;
-                    Current?.Authority = AuthorityReserved.NoAuthority;
+                    Current?.TCS?.SetResult(Current?.Authority ?? AuthorityReserved.NoAuthority);
+                    Current?.Authority = AuthorityReserved.NoAuthority; 
                 }
             }
         }
@@ -140,6 +145,7 @@ namespace IVSoftware.Portable.Disposable
             DHost = new (this);
             var msg = $"{Authority.ToFullKey()} authority epoch has been cancelled.";
             Authority = AuthorityReserved.NoAuthority;
+            TCS?.SetCanceled();
             if(@throw) throw new OperationCanceledException(msg);
         }
 
@@ -150,7 +156,14 @@ namespace IVSoftware.Portable.Disposable
 
         public IDisposable RequestAuthority(Enum authority, Dictionary<string, object>? properties = null)
             => DHost.GetToken(sender: authority, properties);
-
+        #region A W A I T
+        TaskCompletionSource<Enum>? _tcs = default;
+        private TaskCompletionSource<Enum>? TCS { get; set; }
+        public TaskAwaiter<Enum> GetAwaiter()
+        {
+            return (TCS?.Task ?? Task.FromResult(Authority)).GetAwaiter();
+        }
+        #endregion A W A I T
 
         #region E V E N T S
         private object _eventLock = new();

@@ -4,6 +4,7 @@ using IVSoftware.Portable.Disposable;
 using IVSoftware.Portable.Xml.Linq.XBoundObject;
 using IVSoftware.WinOS.MSTest.Extensions;
 using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace IVSoftware.MSTest
 {
@@ -427,7 +428,7 @@ TestAuthority1.C";
         }
 
         [TestMethod]
-        public void Test_ReleasedSenders()
+        public void Test_ReleasedSendersAndDictionary()
         {
             string actual, expected;
 
@@ -518,12 +519,29 @@ TestAuthority1.C";
         }
 
         [TestMethod]
-        public void Test_Dictionary()
+        public async Task Test_Awaiter()
         {
             string actual, expected;
 
             AuthorityEpochProvider<TestAuthority1> aep = new();
             var builder = new List<string?>();
+
+            await aep;
+
+            var stopwatch = Stopwatch.StartNew();
+            TaskCompletionSource ensureTestStart = new();
+            _ = Task.Run(async () =>
+            {
+                ensureTestStart.SetResult();
+                using (aep.RequestAuthority(TestAuthority1.A))
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                }
+            });
+            await ensureTestStart.Task;
+            await aep;
+            stopwatch.Stop();
+            { }
         }
     }
 }
