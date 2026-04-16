@@ -77,7 +77,7 @@ namespace IVSoftware.Portable.Disposable
         /// - HasAuthority is false;
         /// - IsDisposing is false.
         /// </remarks>
-        void CancelAuthorityEpoch(bool @throw);
+        void CancelAuthorityEpoch(bool @throw = false);
         
         /// <summary>
         /// Indicates that the epoch was cancelled.

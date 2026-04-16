@@ -140,7 +140,7 @@ namespace IVSoftware.Portable.Disposable
         public event EventHandler<BeginUsingEventArgs>? BeginUsing;
         public event EventHandler<CountChangedEventArgs>? CountChanged;
         public event EventHandler<FinalDisposeEventArgs>? FinalDispose;
-        public void CancelAuthorityEpoch(bool @throw)
+        public void CancelAuthorityEpoch(bool @throw = false)
         {
             IsCancelled = true;
             DHost.Current = null;
