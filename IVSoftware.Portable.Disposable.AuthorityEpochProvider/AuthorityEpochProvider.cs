@@ -168,6 +168,38 @@ namespace IVSoftware.Portable.Disposable
         #endregion A W A I T
 
         #region E V E N T S
+
+#if false && ABSTRACT
+        -----------------------
+        Contract Event Handling
+        -----------------------
+
+        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        Important:
+        This path is only used when consumers subscribe via the interface
+        (IAuthorityEpochProvider) rather than the concrete type. In typical
+        usage, consumers subscribe directly to the concrete events, making
+        this fanout path relatively uncommon.
+        +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        IAuthorityEpochProvider is decoupled from specialized events.
+
+        event EventHandler? BeginUsing;
+        event EventHandler? FinalDispose;
+        
+        ---
+        In contrast, DisposableHost (used for this implementation) has:
+
+        public event BeginUsingEventHandler BeginUsing;
+        public event FinalDisposeEventHandler FinalDispose;
+        ___
+
+        ∴ Handlers subscribed through the interface (plain old EventHandler)
+           are added to the invocation lists and invoked during the lifecycle 
+           pipeline once the native (specialized) event has been raised using
+           the same event args (with the ability to downcast them in the handler).
+#endif
+
         private object _eventLock = new();
         event EventHandler? IAuthorityEpochProvider.BeginUsing
         {
