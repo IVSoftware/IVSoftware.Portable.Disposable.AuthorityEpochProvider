@@ -46,21 +46,21 @@ namespace IVSoftware.MSTest
                 // Access a specialized property that isn't available
                 // (without casting) on the explicit interface version.
                 builder.Add(
-                    $"1. {nameof(aep.BeginUsing)}: {((Enum)e.AutoDisposableContext.Sender).ToFullKey()}");
+                    $"1. {nameof(aep.BeginUsing)}: {((Enum)e.AutoDisposableContext.Sender).ToFullKey()} IsDisposing={aep.IsDisposing}");
             };
             aep.FinalDispose += (sender, e) =>
             {
                 // Access a specialized property that isn't available
                 // (without casting) on the explicit interface version.
                 builder.Add(
-                    $"1. {nameof(aep.BeginUsing)}: {string.Join(",", e.ReleasedSenders.OfType<Enum>().Select(_=>_.ToFullKey()))}");
+                    $"1. {nameof(aep.FinalDispose)}: {string.Join(",", e.ReleasedSenders.OfType<Enum>().Select(_=>_.ToFullKey()))} IsDisposing={aep.IsDisposing}");
             };
             #endregion S P E C I A L I Z E D    E V E N T S
 
             #region I N T E R F A C E    E V E N T S
             ((IAuthorityEpochProvider)aep).BeginUsing += (sender, e) =>
             {
-                builder.Add($"2. {nameof(aep.BeginUsing)}: {aep.Authority.ToFullKey()}");
+                builder.Add($"2. {nameof(aep.BeginUsing)}: {aep.Authority.ToFullKey()} IsDisposing={aep.IsDisposing}");
             };
             ((IAuthorityEpochProvider)aep).FinalDispose += (sender, e) =>
             {
@@ -81,27 +81,27 @@ namespace IVSoftware.MSTest
                     actual.ToClipboardExpected();
                     { }
                     expected = @" 
-1. BeginUsing: TestAuthority.A1
-2. BeginUsing: TestAuthority.A1"
+1. BeginUsing: TestAuthority.A1 IsDisposing=False
+2. BeginUsing: TestAuthority.A1 IsDisposing=False"
                     ;
 
                     Assert.AreEqual(
                         expected.NormalizeResult(),
                         actual.NormalizeResult(),
-                        "Expecting begin using."
+                        "Expecting parity for 1 event each on specialized and interface connection points."
                     );
                 }
                 actual = string.Join(Environment.NewLine, builder); builder.Clear();
                 actual.ToClipboardExpected();
                 { }
                 expected = @" 
-1. BeginUsing: TestAuthority.A1
+1. FinalDispose: TestAuthority.A1 IsDisposing=True
 2. FinalDispose: TestAuthority.A1 IsDisposing=True"
                 ;
                 Assert.AreEqual(
                     expected.NormalizeResult(),
                     actual.NormalizeResult(),
-                    "Expecting begin using."
+                        "Expecting parity for 1 event each on specialized and interface connection points."
                 );
 
                 Assert.IsFalse(aep.IsCancelled);
@@ -118,14 +118,14 @@ namespace IVSoftware.MSTest
                     actual.ToClipboardExpected();
                     { }
                     expected = @" 
-1. BeginUsing: TestAuthority.A1
-2. BeginUsing: TestAuthority.A1"
+1. BeginUsing: TestAuthority.A1 IsDisposing=False
+2. BeginUsing: TestAuthority.A1 IsDisposing=False"
                     ;
 
                     Assert.AreEqual(
                         expected.NormalizeResult(),
                         actual.NormalizeResult(),
-                        "Expecting begin using."
+                        "Expecting parity for 1 event each on specialized and interface connection points."
                     );
 
                     Assert.AreEqual(aep.Authority.ToFullKey(), TestAuthority.A1.ToFullKey());
