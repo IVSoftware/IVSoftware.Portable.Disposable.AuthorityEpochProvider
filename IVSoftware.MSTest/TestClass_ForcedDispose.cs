@@ -6,13 +6,11 @@ using IVSoftware.WinOS.MSTest.Extensions;
 using Newtonsoft.Json;
 using System.Diagnostics;
 
-namespace IVSoftware.MSTest
+namespace IVS.MSTest
 {
     [TestClass]
     public sealed class TestClass_ForcedDispose
     {
-        enum TestAuthority1 { A, B, C,}
-        enum TestAuthority2 { A, B, C,}
         enum StdTestProperties
         {
             Array,
