@@ -36,8 +36,6 @@ using (aep.RequestAuthority(MyAuthority.A1))
 }
 // FinalDispose raised once here
 ```
-___
-
 ## Key Behaviors
 
 - **Authority is established once** (0 -> 1 transition)
@@ -102,3 +100,57 @@ ___
 
 While not required for authority coordination, this enables a powerful pattern:
 a shared, mutable context that evolves across the epoch and resolves deterministically at teardown.
+
+___
+_While AuthorityEpochProvider is intended for production code, there is also utility when it comes to unit testing. Version 1.0.3 adds this handy test utility._
+___
+
+# TestableEpoch
+
+## Deterministic Test Data
+
+`TestableEpoch` is useful when a unit test needs fast, repeatable
+fixture data.
+
+The pattern is simple:
+
+- Write production-style code such as
+  `Guid.NewGuid().WithTestability().ToString()`
+- Wrap the fixture builder in `using var te = this.TestableEpoch();`
+- Capture the generated text model once
+- Paste that text back into `expected`
+
+Why this helps:
+
+- The call site stays natural
+- The generated ids and timestamps become deterministic inside the test
+- Large copied expectations remain stable across runs
+- Test writing stays fast because "generate, inspect, paste" is safe
+
+Why this matters:
+
+If a production model like `PlaceableModel` is allowed to create real
+Guids during the test, then the text model changes every run. The copied
+`expected` value becomes noise instead of a useful assertion.
+
+With `TestableEpoch`, the same fixture builder produces the same ids and
+timestamps every time, so verbose modeled output can be captured and
+asserted directly.
+
+Typical use:
+
+```csharp
+[TestMethod, DoNotParallelize]
+public void Test_Something()
+{
+    using var te = this.TestableEpoch();
+    var id = Guid.NewGuid().WithTestability().ToString();
+}
+```
+
+`DoNotParallelize` is important because `TestableEpoch` uses static state
+and must remain isolated per test.
+
+This is especially handy for tests that build on-the-fly XML or text
+models, inspect the result once, and then lock it in as the expected
+value.

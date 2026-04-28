@@ -28,7 +28,7 @@
 
 		<FileVersion>$(AssemblyVersion)</FileVersion>
 		<Version>$(AssemblyVersion)</Version>
-		<BaseVersion>1.0.2</BaseVersion>
+		<BaseVersion>1.0.3</BaseVersion>
 		<VersionPrefix>$(BaseVersion)</VersionPrefix>
 
 		<PackageReadmeFile>README.md</PackageReadmeFile>
@@ -56,6 +56,13 @@
 			* Promotes generic Authority and Authorities to public members for better discoverability.
 			* Reduces reliance on explicit interface access for common scenarios.
 			* No breaking changes.
+
+			Version 1.0.3
+			
+			* Adds TestableEpoch support for deterministic Guid and DateTimeOffset generation in unit tests.
+			* Introduces WithTestability extension methods that preserve natural production call sites.
+			* Renames the helper away from Affinity terminology for broader reuse and clearer intent.
+			* Documents the TestableEpoch workflow in the package README.
 
 		</PackageReleaseNotes>
 
