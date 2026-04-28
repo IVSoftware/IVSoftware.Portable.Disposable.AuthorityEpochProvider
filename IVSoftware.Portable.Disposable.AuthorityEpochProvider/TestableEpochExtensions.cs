@@ -1,6 +1,7 @@
 ﻿using IVSoftware.Portable.Common.Exceptions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace IVSoftware.Portable.Disposable
@@ -203,14 +204,30 @@ namespace IVSoftware.Portable.Disposable
         /// </summary>
         public static void ResetEpoch(this IDisposable @this)
         {
-            if (@this is DisposableHost.DisposableToken token)
+            if (DHostTokenDispenser.IsZero())
             {
-                _guidCurrent = GuidReset;
-                _utcCurrent = UtcReset;
+                @this.ThrowSoft<InvalidOperationException>(
+                    $"Reset was requested when no active epoch is running.");
             }
             else
             {
-                @this.ThrowHard<InvalidCastException>("Receiver must be a DisposableHost.DisposableToken}");
+                if (DHostTokenDispenser.Tokens.Any(_ => ReferenceEquals(_, @this)))
+                {
+                    if (@this is DisposableHost.DisposableToken token)
+                    {
+                        _guidCurrent = GuidReset;
+                        _utcCurrent = UtcReset;
+                    }
+                    else
+                    {
+                        @this.ThrowHard<InvalidCastException>("Receiver must be a DisposableHost.DisposableToken}");
+                    }
+                }
+                else
+                {
+                    @this.ThrowHard<InvalidOperationException>(
+                        $"Epoch can only be reset from the current active token.");
+                }
             }
         }
         private static string ToFullKey(this Enum @this)

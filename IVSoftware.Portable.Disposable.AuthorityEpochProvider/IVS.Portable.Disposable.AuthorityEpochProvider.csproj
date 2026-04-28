@@ -61,8 +61,8 @@
 			
 			* Adds TestableEpoch support for deterministic Guid and DateTimeOffset generation in unit tests.
 			* Introduces WithTestability extension methods that preserve natural production call sites.
-			* Renames the helper away from Affinity terminology for broader reuse and clearer intent.
 			* Documents the TestableEpoch workflow in the package README.
+			* Supports expanded MSTest coverage including deterministic test fixture generation.
 
 		</PackageReleaseNotes>
 

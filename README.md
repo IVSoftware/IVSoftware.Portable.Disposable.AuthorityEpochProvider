@@ -1,4 +1,4 @@
-# AuthorityEpochProvider
+# AuthorityEpochProvider [[Github]](https://github.com/IVSoftware/IVSoftware.Portable.Disposable.AuthorityEpochProvider.git)
 
 Coordinates a shared, reference-counted authority across overlapping scopes.
 
