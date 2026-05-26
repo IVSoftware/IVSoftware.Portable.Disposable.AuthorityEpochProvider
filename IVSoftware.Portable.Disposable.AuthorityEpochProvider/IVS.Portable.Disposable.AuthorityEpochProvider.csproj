@@ -38,34 +38,31 @@
 		<PackageIcon>ivs-nuget-logo.4.png</PackageIcon>
 
 		<PackageReleaseNotes>
-			Version 1.0.0 - Initial release.
+			1.1.0-beta
+			Adds HasEverRequestedAuthority(...) to distinguish epoch participation history
+			from currently held authority. This affects only custom IAuthorityEpochProvider
+			implementations. The provided concrete implementation supports this
+			automatically and serves as a guide to add equivalent epoch-history tracking.
 
-			* Introduces IAuthorityEpochProvider for coordinated authority-based epochs.
-			* Establishes first-wins authority model with ordered participation tracking.
-			* Integrates with DisposableHost for deterministic FinalDispose semantics.
-			* Supports cancellation of FinalDispose event without interrupting epoch teardown.
+			1.0.3
+			Adds TestableEpoch support for deterministic Guid and DateTimeOffset
+			generation in unit tests, along with documentation and broader MSTest
+			coverage for repeatable fixture generation.
 
-			Version 1.0.1
+			1.0.2
+			Improves usability by adding the default
+			CancelAuthorityEpoch(@throw = false) behavior and promoting generic
+			Authority and Authorities members for easier direct consumption.
 
-			* Adds runtime type enforcement to generic version via Throw pattern.
-			* Expands test coverage for cancellation, mixed authority scenarios, and lifecycle invariants.
-			* Validates dictionary-backed context aggregation and FinalDispose snapshot semantics.
-			* Confirms awaitable behavior aligned with epoch completion.
+			1.0.1
+			Strengthens the generic API with runtime type enforcement and expanded
+			test coverage for cancellation, mixed-authority scenarios, lifecycle
+			invariants, awaitable completion, and context snapshot behavior.
 
-			Version 1.0.2
-
-			* Adds a default value for the CancelAuthorityEpoch @throw parameter (@throw = false).
-			* Promotes generic Authority and Authorities to public members for better discoverability.
-			* Reduces reliance on explicit interface access for common scenarios.
-			* No breaking changes.
-
-			Version 1.0.3
-			
-			* Adds TestableEpoch support for deterministic Guid and DateTimeOffset generation in unit tests.
-			* Introduces WithTestability extension methods that preserve natural production call sites.
-			* Documents the TestableEpoch workflow in the package README.
-			* Supports expanded MSTest coverage including deterministic test fixture generation.
-
+			1.0.0
+			Initial release of AuthorityEpochProvider for authority-based coordination
+			over DisposableHost epochs, including first-wins authority selection,
+			reference-counted participation, and deterministic FinalDispose behavior.
 		</PackageReleaseNotes>
 
 		<AssemblyOriginatorKeyFile>D:\PFX\231201.ivs.pfx</AssemblyOriginatorKeyFile>

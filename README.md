@@ -36,6 +36,11 @@ using (aep.RequestAuthority(MyAuthority.A1))
 }
 // FinalDispose raised once here
 ```
+
+The `Authority` property represents the epoch's primary authority: it is
+set when the epoch begins and does not change as additional participants
+join.
+
 ## Key Behaviors
 
 - **Authority is established once** (0 -> 1 transition)
@@ -47,9 +52,6 @@ using (aep.RequestAuthority(MyAuthority.A1))
   - Detaches the provider from the current epoch immediately
   - Suppresses `FinalDispose` for that abandoned epoch
   - Allows the instance to begin a fresh epoch on the next request
-
-
-The `Authority` property represents the epoch's primary authority: it is set when the epoch begins and does not change as additional participants join.
 
 
 > _An optional shared ephemeral context (see *Context* below) is available while tokens are active._
@@ -79,7 +81,12 @@ using (aep.RequestAuthority(A2))
 }
 ```
 
-This enables scenarios where work proceeds in a predictable cycle, anchored to the first participant's entry point. The `HasEverRequestedAuthority` can be used to distinguish prior participation in the current epoch from authorities that are actively held right now.
+This enables scenarios where work proceeds in a predictable cycle,
+anchored to the first participant's entry point.
+
+For token-ring style coordination, `HasEverRequestedAuthority` can be
+used to distinguish prior participation in the current epoch from
+authorities that are actively held right now.
 
 ___
 

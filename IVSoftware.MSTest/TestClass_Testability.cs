@@ -9,10 +9,6 @@ namespace IVS.MSTest
         /// <summary>
         /// Verifies the deterministic claims made in the package README.
         /// </summary>
-        /// <remarks>
-        /// Confirms that TestableEpoch makes Guid and DateTimeOffset values
-        /// repeatable while preserving natural production-style call sites.
-        /// </remarks>
         [TestMethod, DoNotParallelize]
         public void Test_ReadMeClaims()
         {
@@ -20,8 +16,14 @@ namespace IVS.MSTest
             var builder = new List<string>();
 
             subtest_TestablEpoch();
+            subtest_HasEver();
 
             #region S U B T E S T S
+
+            /// <summary>
+            /// Confirms that TestableEpoch makes Guid and DateTimeOffset values
+            /// repeatable while preserving natural production-style call sites.
+            /// </summary>
             void subtest_TestablEpoch()
             {
                 using (var te = this.TestableEpoch())
@@ -83,28 +85,48 @@ namespace IVS.MSTest
                 }
             }
 
-            subtest_HasEver();
+            /// <summary>
+            /// Verifies the semantic split between "held now" and "ever requested
+            /// during the current epoch", including reset when the epoch fully unwinds.
+            /// </summary>
             void subtest_HasEver()
             {
                 var aep = new AuthorityEpochProvider<TestAuthority1>();
-                using(aep.RequestAuthority(TestAuthority1.A))
+
+                using (aep.RequestAuthority(TestAuthority1.A))
                 {
+                    // A is active now, and has participated in this epoch.
                     Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.A));
                     Assert.IsTrue(aep.HasEverRequestedAuthority(TestAuthority1.A));
+
+                    // B has not yet participated.
                     Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority1.B));
                     Assert.IsFalse(aep.HasEverRequestedAuthority(TestAuthority1.B));
+
                     using (aep.RequestAuthority(TestAuthority1.B))
                     {
+                        // While B is held, both A and B are active and both have participated.
                         Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.A));
                         Assert.IsTrue(aep.HasEverRequestedAuthority(TestAuthority1.A));
                         Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.B));
                         Assert.IsTrue(aep.HasEverRequestedAuthority(TestAuthority1.B));
                     }
+
+                    // After B is disposed, A remains active.
+                    // B is no longer active, but it still counts as having participated
+                    // during the current epoch.
                     Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.A));
                     Assert.IsTrue(aep.HasEverRequestedAuthority(TestAuthority1.A));
                     Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority1.B));
                     Assert.IsTrue(aep.HasEverRequestedAuthority(TestAuthority1.B));
                 }
+
+                // Once the epoch fully unwinds, neither authority is active and the
+                // epoch-scoped participation history is cleared.
+                Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority1.A));
+                Assert.IsFalse(aep.HasEverRequestedAuthority(TestAuthority1.A));
+                Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority1.B));
+                Assert.IsFalse(aep.HasEverRequestedAuthority(TestAuthority1.B));
             }
             #endregion S U B T E S T S
         }
