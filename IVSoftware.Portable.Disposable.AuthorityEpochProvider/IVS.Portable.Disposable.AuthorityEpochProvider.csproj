@@ -30,7 +30,7 @@
 		<Version>$(AssemblyVersion)</Version>
 		<BaseVersion>1.1.0</BaseVersion>
 		<VersionPrefix>$(BaseVersion)</VersionPrefix>
-		<VersionSuffix>beta</VersionSuffix>
+		<VersionSuffix>rc</VersionSuffix>
 
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -38,11 +38,17 @@
 		<PackageIcon>ivs-nuget-logo.4.png</PackageIcon>
 
 		<PackageReleaseNotes>
+			1.1.0-rc
+			Adds the virtual OnCancelAuthorityEpoch() hook so derived providers can
+			handle cancellation-specific behavior at the actual cancellation point,
+			without depending on FinalDispose.
+
 			1.1.0-beta
-			Adds HasEverRequestedAuthority(...) to distinguish epoch participation history
-			from currently held authority. This affects only custom IAuthorityEpochProvider
-			implementations. The provided concrete implementation supports this
-			automatically and serves as a guide to add equivalent epoch-history tracking.
+			Adds HasEverRequestedAuthority(...) to report participation history
+			separately from authority currently held. This affects only custom
+			IAuthorityEpochProvider implementations. The provided concrete
+			implementation supports this automatically and serves as a guide for
+			equivalent epoch-history tracking.
 
 			1.0.3
 			Adds TestableEpoch support for deterministic Guid and DateTimeOffset

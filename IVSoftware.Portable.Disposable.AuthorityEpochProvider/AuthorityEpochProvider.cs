@@ -149,13 +149,20 @@ namespace IVSoftware.Portable.Disposable
         public event EventHandler<FinalDisposeEventArgs>? FinalDispose;
         public void CancelAuthorityEpoch(bool @throw = false)
         {
+            var cancelledAuthority = Authority;
+            OnCancelAuthorityEpoch();
+            var msg = $"{cancelledAuthority.ToFullKey()} authority epoch has been cancelled.";
+            if(@throw) throw new OperationCanceledException(msg);
+        }
+
+        protected virtual void OnCancelAuthorityEpoch()
+        {
             IsCancelled = true;
             DHost.Current = null;
             TCS?.TrySetCanceled();
             DHost = new (this);
-            var msg = $"{Authority.ToFullKey()} authority epoch has been cancelled.";
+            _authorityHistory.Clear();
             Authority = AuthorityReserved.NoAuthority;
-            if(@throw) throw new OperationCanceledException(msg);
         }
 
         public bool HasRequestedAuthority(Enum authority)

@@ -15,7 +15,7 @@ namespace IVSoftware.Portable.Disposable
         public new T[] Authorities => [.. base.Authorities.Cast<T>()];
 
         public bool HasEverRequestedAuthority(T authority)
-            => _authorityHistory.Contains(authority);
+            => base.HasEverRequestedAuthority(authority);
 
         public bool HasRequestedAuthority(T authority) => base.HasRequestedAuthority(authority);
 
