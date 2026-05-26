@@ -45,12 +45,16 @@ namespace IVSoftware.Portable.Disposable
         IDisposable RequestAuthority(Enum authority, Dictionary<string, object>? properties = null);
 
         /// <summary>
-        /// Indicates whether an authority has ever been requested.
-        /// </summary>       
-        /// <remarks>
-        /// Includes all such requests regardless of grant.
-        /// </remarks>
+        /// Returns a value indicating whether the current epoch has any active
+        /// (not disposed) token for the specified authority.
+        /// </summary>
         bool HasRequestedAuthority(Enum authority);
+
+        /// <summary>
+        /// Returns a value indicating whether the current epoch has at any time
+        /// requested a token for the specified authority.
+        /// </summary>
+        bool HasEverRequestedAuthority(Enum authority);
 
         /// <summary>
         /// Threadsafe, concurrent check on whether the epoch is idle.
@@ -109,7 +113,28 @@ namespace IVSoftware.Portable.Disposable
         new T Authority { get; }
         new T[] Authorities { get; }
 
+
+        /// <summary>
+        /// Request authority.
+        /// </summary>
+        /// <remarks>
+        /// - Authority is established on the count 0 -> 1 edge.
+        /// - The 1 -> 0 edge raises the FinalDispose event with Authority intact and IsDisposing=true.
+        /// - 1+ requestors are added as tokens and are visible to the HasAuthority method.
+        /// </remarks>
         IDisposable RequestAuthority(T authority, Dictionary<string, object>? properties = null);
+
+        /// <summary>
+        /// Returns a value indicating whether the current epoch has any active
+        /// (not disposed) token for the specified authority.
+        /// </summary>
         bool HasRequestedAuthority(T authority);
+
+
+        /// <summary>
+        /// Returns a value indicating whether the current epoch has at any time
+        /// requested a token for the specified authority.
+        /// </summary>
+        bool HasEverRequestedAuthority(T authority);
     }
 }

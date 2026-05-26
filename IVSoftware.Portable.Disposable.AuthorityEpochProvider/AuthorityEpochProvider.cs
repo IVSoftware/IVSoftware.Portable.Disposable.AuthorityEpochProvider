@@ -103,10 +103,15 @@ namespace IVSoftware.Portable.Disposable
         protected virtual void OnCountChanged(CountChangedEventArgs e)
         {
             CountChanged?.Invoke(this, e);
+            if(e.Token.Sender is Enum authority)
+            {
+                _authorityHistory.Add(authority);
+            }
         }
         protected virtual void OnFinalDispose(FinalDisposeEventArgs e)
         {
             FinalDispose?.Invoke(this, e);
+            _authorityHistory.Clear();
         }
 
         private DHostAuthorityProvider DHost
@@ -131,6 +136,8 @@ namespace IVSoftware.Portable.Disposable
             .Select(_ => _.Sender)
             .OfType<Enum>()
             .ToArray();
+
+        protected readonly HashSet<Enum> _authorityHistory = new();
 
         public bool IsDisposing { get; private set; }
 
@@ -165,6 +172,9 @@ namespace IVSoftware.Portable.Disposable
         {
             return (TCS?.Task ?? Task.FromResult(Authority)).GetAwaiter();
         }
+
+        public bool HasEverRequestedAuthority(Enum authority)
+            => _authorityHistory.Contains(authority);
         #endregion A W A I T
 
         #region E V E N T S

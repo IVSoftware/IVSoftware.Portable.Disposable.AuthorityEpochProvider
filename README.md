@@ -15,7 +15,7 @@ Multiple participants need to operate within a shared context, but:
 
 `AuthorityEpochProvider` wraps a reference-counted lifetime (`DisposableHost`) and projects:
 
-- **Stable authority** (first requester wins)
+- **Stable primary authority** (established by the first requester and unchanged for the life of the epoch)
 - **Scoped participation** via `IDisposable`
 - **Deterministic teardown** on the 1 -> 0 transition
 - **Safe cancellation** that detaches the current epoch without poisoning the instance
@@ -42,11 +42,14 @@ using (aep.RequestAuthority(MyAuthority.A1))
 - **Authority remains stable** until all participants exit
 - **Nested and overlapping requests do not override authority**
 - **FinalDispose fires once** when the last token is released
-- **IsDisposing is true during FinalDispose**
+- **IsDisposing is true during FinalDispose** 
 - **CancelAuthorityEpoch**:
-  - Ends the current epoch immediately
-  - Suppresses FinalDispose
-  - Allows reuse on the next line
+  - Detaches the provider from the current epoch immediately
+  - Suppresses `FinalDispose` for that abandoned epoch
+  - Allows the instance to begin a fresh epoch on the next request
+
+
+The `Authority` property represents the epoch's primary authority: it is set when the epoch begins and does not change as additional participants join.
 
 
 > _An optional shared ephemeral context (see *Context* below) is available while tokens are active._
@@ -76,14 +79,14 @@ using (aep.RequestAuthority(A2))
 }
 ```
 
-This enables scenarios where work proceeds in a predictable cycle,
-anchored to the first participant’s entry point.
+This enables scenarios where work proceeds in a predictable cycle, anchored to the first participant's entry point. The `HasEverRequestedAuthority` can be used to distinguish prior participation in the current epoch from authorities that are actively held right now.
 
 ___
 
 ## Notes
 
-- `HasRequestedAuthority` reflects **active participation**, not history
+- `HasRequestedAuthority` returns `true` only when the specified authority currently has an active (not yet disposed) token in the epoch
+- `HasEverRequestedAuthority` returns `true` when the specified authority has participated at any point during the current epoch, even if its token is no longer active
 - Cancellation detaches the provider from the current epoch; existing scopes complete silently
 - Thread-safe via underlying host
 

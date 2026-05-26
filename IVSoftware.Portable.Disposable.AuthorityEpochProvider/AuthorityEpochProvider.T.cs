@@ -1,9 +1,7 @@
-﻿using IVSoftware.Portable.Common.Attributes;
-using IVSoftware.Portable.Common.Exceptions;
+﻿using IVSoftware.Portable.Common.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace IVSoftware.Portable.Disposable
 {
@@ -15,6 +13,9 @@ namespace IVSoftware.Portable.Disposable
         public new T Authority => (T)base.Authority;
 
         public new T[] Authorities => [.. base.Authorities.Cast<T>()];
+
+        public bool HasEverRequestedAuthority(T authority)
+            => _authorityHistory.Contains(authority);
 
         public bool HasRequestedAuthority(T authority) => base.HasRequestedAuthority(authority);
 

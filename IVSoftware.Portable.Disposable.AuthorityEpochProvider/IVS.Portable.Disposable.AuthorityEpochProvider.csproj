@@ -28,12 +28,14 @@
 
 		<FileVersion>$(AssemblyVersion)</FileVersion>
 		<Version>$(AssemblyVersion)</Version>
-		<BaseVersion>1.0.3</BaseVersion>
+		<BaseVersion>1.1.0</BaseVersion>
 		<VersionPrefix>$(BaseVersion)</VersionPrefix>
+		<VersionSuffix>beta</VersionSuffix>
 
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<PackageIcon>ivs-nuget-logo.4.png</PackageIcon>
 
 		<PackageReleaseNotes>
 			Version 1.0.0 - Initial release.
@@ -79,6 +81,13 @@
 
 	<ItemGroup>
 		<None Include="..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\IVSoftware.Portable.Disposable.AuthorityEpochProvider\img\ivs-nuget-logo.4.png">
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
 		</None>

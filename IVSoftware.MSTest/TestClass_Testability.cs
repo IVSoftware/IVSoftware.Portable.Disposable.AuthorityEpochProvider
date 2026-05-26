@@ -18,63 +18,95 @@ namespace IVS.MSTest
         {
             string actual, expected;
             var builder = new List<string>();
-            using (var te = this.TestableEpoch())
-            {
-                builder.Add(new Guid().WithTestability().ToString());
-                builder.Add(new Guid().WithTestability().ToString());
-                builder.Add(DateTimeOffset.UtcNow.WithTestability().ToString("O"));
-                builder.Add(DateTimeOffset.UtcNow.WithTestability().ToString("O"));
 
-                // <PackageReference Include="IVSoftware.WinOS.MSTest.Extensions" Version="*" />
-                // Utility for on-the-fly limit pasting. Requires human review.
-                actual = string.Join(Environment.NewLine, builder); builder.Clear();
-                actual.ToClipboardExpected();
-                { }
-                expected = @" 
+            subtest_TestablEpoch();
+
+            #region S U B T E S T S
+            void subtest_TestablEpoch()
+            {
+                using (var te = this.TestableEpoch())
+                {
+                    builder.Add(new Guid().WithTestability().ToString());
+                    builder.Add(new Guid().WithTestability().ToString());
+                    builder.Add(DateTimeOffset.UtcNow.WithTestability().ToString("O"));
+                    builder.Add(DateTimeOffset.UtcNow.WithTestability().ToString("O"));
+
+                    // <PackageReference Include="IVSoftware.WinOS.MSTest.Extensions" Version="*" />
+                    // Utility for on-the-fly limit pasting. Requires human review.
+                    actual = string.Join(Environment.NewLine, builder); builder.Clear();
+                    actual.ToClipboardExpected();
+                    { }
+                    expected = @" 
 312d1c21-0000-0000-0000-000000000000
 312d1c21-0000-0000-0000-000000000001
 2000-01-01T09:00:00.0000000+07:00
 2000-01-01T09:01:00.0000000+07:00";
 
-                Assert.AreEqual(
-                    expected.NormalizeResult(),
-                    actual.NormalizeResult(),
-                    "Expecting deterministic Guid and time sequences."
-                );
+                    Assert.AreEqual(
+                        expected.NormalizeResult(),
+                        actual.NormalizeResult(),
+                        "Expecting deterministic Guid and time sequences."
+                    );
 
-                // Now, within the same using block, reset the epoch.
-                _ = new Guid().WithTestability();
-                te.ResetEpoch();
+                    // Now, within the same using block, reset the epoch.
+                    _ = new Guid().WithTestability();
+                    te.ResetEpoch();
 
-                builder.Add(new Guid().WithTestability().ToString());
-                builder.Add(DateTimeOffset.UtcNow.WithTestability().ToString("O"));
+                    builder.Add(new Guid().WithTestability().ToString());
+                    builder.Add(DateTimeOffset.UtcNow.WithTestability().ToString("O"));
 
-                actual = string.Join(Environment.NewLine, builder); builder.Clear();
-                actual.ToClipboardExpected();
-                { }
-                expected = @" 
+                    actual = string.Join(Environment.NewLine, builder); builder.Clear();
+                    actual.ToClipboardExpected();
+                    { }
+                    expected = @" 
 312d1c21-0000-0000-0000-000000000000
 2000-01-01T09:00:00.0000000+07:00";
 
-                Assert.AreEqual(
-                    expected.NormalizeResult(),
-                    actual.NormalizeResult(),
-                    "Expecting deterministic Guid and time sequences."
-                );
-            }
+                    Assert.AreEqual(
+                        expected.NormalizeResult(),
+                        actual.NormalizeResult(),
+                        "Expecting deterministic Guid and time sequences."
+                    );
+                }
 
-            using (var te2 = this.TestableEpoch())
-            {
-                actual = new Guid().WithTestability().ToString();
-                expected = @" 
+                using (var te2 = this.TestableEpoch())
+                {
+                    actual = new Guid().WithTestability().ToString();
+                    expected = @" 
 312d1c21-0000-0000-0000-000000000000";
 
-                Assert.AreEqual(
-                    expected.NormalizeResult(),
-                    actual.NormalizeResult(),
-                    "Expecting ResetEpoch to restart the deterministic sequence."
-                );
+                    Assert.AreEqual(
+                        expected.NormalizeResult(),
+                        actual.NormalizeResult(),
+                        "Expecting ResetEpoch to restart the deterministic sequence."
+                    );
+                }
             }
+
+            subtest_HasEver();
+            void subtest_HasEver()
+            {
+                var aep = new AuthorityEpochProvider<TestAuthority1>();
+                using(aep.RequestAuthority(TestAuthority1.A))
+                {
+                    Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.A));
+                    Assert.IsTrue(aep.HasEverRequestedAuthority(TestAuthority1.A));
+                    Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority1.B));
+                    Assert.IsFalse(aep.HasEverRequestedAuthority(TestAuthority1.B));
+                    using (aep.RequestAuthority(TestAuthority1.B))
+                    {
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.A));
+                        Assert.IsTrue(aep.HasEverRequestedAuthority(TestAuthority1.A));
+                        Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.B));
+                        Assert.IsTrue(aep.HasEverRequestedAuthority(TestAuthority1.B));
+                    }
+                    Assert.IsTrue(aep.HasRequestedAuthority(TestAuthority1.A));
+                    Assert.IsTrue(aep.HasEverRequestedAuthority(TestAuthority1.A));
+                    Assert.IsFalse(aep.HasRequestedAuthority(TestAuthority1.B));
+                    Assert.IsTrue(aep.HasEverRequestedAuthority(TestAuthority1.B));
+                }
+            }
+            #endregion S U B T E S T S
         }
     }
 }
