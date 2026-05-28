@@ -30,20 +30,19 @@
 		<Version>$(AssemblyVersion)</Version>
 		<BaseVersion>1.1.0</BaseVersion>
 		<VersionPrefix>$(BaseVersion)</VersionPrefix>
-		<VersionSuffix>rc</VersionSuffix>
+		<VersionSuffix></VersionSuffix>
 
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-		<PackageIcon>ivs-nuget-logo.4.png</PackageIcon>
+		<PackageIcon>ivs-nuget-logo.8.png</PackageIcon>
 
 		<PackageReleaseNotes>
-			1.1.0-rc
+			1.1.0 stable release
 			Adds the virtual OnCancelAuthorityEpoch() hook so derived providers can
 			handle cancellation-specific behavior at the actual cancellation point,
 			without depending on FinalDispose.
-
-			1.1.0-beta
+			
 			Adds HasEverRequestedAuthority(...) to report participation history
 			separately from authority currently held. This affects only custom
 			IAuthorityEpochProvider implementations. The provided concrete
@@ -90,7 +89,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\IVSoftware.Portable.Disposable.AuthorityEpochProvider\img\ivs-nuget-logo.4.png">
+		<None Include="..\IVSoftware.Portable.Disposable.AuthorityEpochProvider\img\ivs-nuget-logo.8.png">
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
 		</None>
